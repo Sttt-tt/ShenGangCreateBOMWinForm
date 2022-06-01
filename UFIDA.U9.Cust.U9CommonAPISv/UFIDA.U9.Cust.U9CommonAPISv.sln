@@ -1,0 +1,26 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 9.00
+# Visual Studio 2005
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UFIDA.U9.Cust.U9CommonAPISv", "UFIDA.U9.Cust.U9CommonAPISv.csproj", "{FB5CA908-593B-4A41-A505-2204387B5190}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Test", "..\Test\Test.csproj", "{82EC95E5-B359-4A79-B7EF-F6D7CCADEE39}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{FB5CA908-593B-4A41-A505-2204387B5190}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FB5CA908-593B-4A41-A505-2204387B5190}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FB5CA908-593B-4A41-A505-2204387B5190}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FB5CA908-593B-4A41-A505-2204387B5190}.Release|Any CPU.Build.0 = Release|Any CPU
+		{82EC95E5-B359-4A79-B7EF-F6D7CCADEE39}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{82EC95E5-B359-4A79-B7EF-F6D7CCADEE39}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{82EC95E5-B359-4A79-B7EF-F6D7CCADEE39}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{82EC95E5-B359-4A79-B7EF-F6D7CCADEE39}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
