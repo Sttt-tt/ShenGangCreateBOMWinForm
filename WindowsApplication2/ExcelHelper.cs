@@ -194,13 +194,6 @@ namespace WindowsApplication2
         }
 
 
-
-
-        /// <summary>
-        /// 拼接上过datagridview数据
-        /// </summary>
-        /// <param name="index"></param>
-        /// <returns></returns>
         public DataTable ExcelToDataTable2(int index)
         {
             //实例化DataTable来存放数据

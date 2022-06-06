@@ -29,8 +29,15 @@ namespace WindowsApplication2
         /// <returns></returns>
         private DataTable getItemMasters(string item)
         {
-            DataTable dt;
+            DataTable dt = new DataTable();
             string sql = string.Empty;
+            if (!item.Contains("_") && !string.IsNullOrEmpty(item))
+            {
+                sql = string.Format(@"select '0000000000'+Code 料号,Name +'_'+DescFlexField_PrivateDescSeg1+'_'+SPECS 品名 from CBO_ItemMaster where Name like '%{0}%' 
+                                        ", item);
+                dt = MiddleDBInterface.getdt(sql, SQLHelper.sqlconn(Login.strConn));
+                return dt;
+            }
             string[] temps = item.Split('_');
             //如果是3段  精确查找
             if (temps.Length >= 3)
@@ -43,6 +50,11 @@ namespace WindowsApplication2
             {
                 sql = string.Format(@"select '0000000000'+Code 料号,Name +'_'+DescFlexField_PrivateDescSeg1+'_'+SPECS 品名 from CBO_ItemMaster where Name like '%{0}%' and DescFlexField_PrivateDescSeg1 like '%{1}%' 
                                         ", temps[0], temps[1]);
+            }
+            else
+            {
+                sql = string.Format(@"select '0000000000'+Code 料号,Name +'_'+DescFlexField_PrivateDescSeg1+'_'+SPECS 品名 from CBO_ItemMaster where Name like '%{0}%' 
+                                        ", temps[0]);
             }
 
 
@@ -64,8 +76,10 @@ namespace WindowsApplication2
 
             DataGridViewRow row = dataGridView1.CurrentRow;
             if (row.Cells[0].Value == null) return;
-            int index = Form1.dataGridView4.CurrentRow.Index - 1;//由于按回车行索引会自动跳下下一行，所以取当前索引的上一行
-            DataGridViewRow row2 = Form1.dataGridView4.Rows[index];
+            int index = Form1.dataGridView1.CurrentRow.Index - 1;//由于按回车行索引会自动跳下下一行，所以取当前索引的上一行
+            DataGridViewRow row2 = Form1.dataGridView1.Rows[index];
+            Form1.dataGridView1.Rows[index].Cells[8].Selected = true;
+            Form1.dataGridView1.Rows[index + 1].Cells[8].Selected = false;
             row2.Cells["物料编码"].Value = row.Cells[0].Value;//0是编码，1是描述
             row2.Cells["物料描述"].Value = row.Cells[1].Value;//0是编码，1是描述
             this.Close();

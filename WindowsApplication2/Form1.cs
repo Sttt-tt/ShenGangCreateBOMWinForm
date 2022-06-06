@@ -24,6 +24,7 @@ namespace WindowsApplication2
             InitializeComponent();
             //this.tabControl1.Visible = false;
             this.tabControl1.TabPages.Remove(this.tabPage2);
+            this.comboBox1.Visible = false;
             //this.tabControl1.TabPages.AddRange(this.tabPage1);
         }
 
@@ -85,9 +86,12 @@ namespace WindowsApplication2
             }
             return dt;
         }
+        private FlexCell.Grid grid1 = new FlexCell.Grid();
 
+
+        #region <<按钮事件集合>>
         /// <summary>
-        /// 上锅物料清单导入按钮
+        /// 上锅物料清单导入按钮事件
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
@@ -117,38 +121,9 @@ namespace WindowsApplication2
             ExcelHelper excelHelper = new ExcelHelper(openFileDialog.FileName);
             DataTable dt = excelHelper.ExcelToDataTable2(0);
             //Form1.dataGridView4.DataSource = changedt_bom(dt);
-            Form1.dataGridView4.DataSource = dt;
-            initDataGrid(Form1.dataGridView4);
+            dataGridView1.DataSource = dt;
+            initDataGrid(dataGridView1);
         }
-
-        private void initDataGrid(DataGridView dg)
-        {
-            dg.Columns["序号"].Width = 50;
-            dg.Columns["展开层"].Width = 60;
-            dg.Columns["物料描述"].Width = 200;
-            dg.Columns["基本计量单位"].Width = 80;
-            dg.Columns["BOM用途"].Visible = false;
-            dg.Columns["物料类型"].Visible = false;
-            //dg.Columns["母件用量"].Visible = false;
-        }
-
-        /// <summary> 
-        /// 从文件读取 Stream 
-        /// </summary> 
-        public Stream FileToStream(string fileName)
-        {
-            // 打开文件 
-            FileStream fileStream = new FileStream(fileName, FileMode.Open, FileAccess.Read, FileShare.Read);
-            // 读取文件的 byte[] 
-            byte[] bytes = new byte[fileStream.Length];
-            fileStream.Read(bytes, 0, bytes.Length);
-            fileStream.Close();
-            // 把 byte[] 转换成 Stream 
-            Stream stream = new MemoryStream(bytes);
-            return stream;
-        }
-
-
         private void toolStripButton2_Click(object sender, EventArgs e)
         {
             string rtnmsg = "";
@@ -164,60 +139,6 @@ namespace WindowsApplication2
 
             //dataGridView2.DataSource = dt;
         }
-
-        #region 防止NULL异常
-        private long getlong(object obj)
-        {
-            long lg = 0;
-            if (obj != null)
-            {
-                long.TryParse(obj.ToString(), out lg);
-            }
-            return lg;
-        }
-        private bool getbool(object obj)
-        {
-            bool lg = false;
-            if (obj != null)
-            {
-                bool.TryParse(obj.ToString(), out lg);
-            }
-            return lg;
-        }
-        private decimal getdecimal(object obj)
-        {
-            decimal lg = 0;
-            if (obj != null)
-            {
-                decimal.TryParse(obj.ToString(), out lg);
-            }
-            return lg;
-        }
-        private int getint(object obj)
-        {
-            int lg = 0;
-            if (obj != null)
-            {
-                int.TryParse(obj.ToString(), out lg);
-            }
-            return lg;
-        }
-        private int getgiftint(object obj)
-        {
-            int lg = 0;
-            if (obj != null)
-            {
-                int.TryParse(obj.ToString(), out lg);
-            }
-            else
-            {
-                lg = -1;
-            }
-            return lg;
-        }
-
-        #endregion
-        private FlexCell.Grid grid1 = new FlexCell.Grid();
         private void toolStripButton3_Click(object sender, EventArgs e)
         {
             string CommandType = "Routing";
@@ -274,51 +195,9 @@ namespace WindowsApplication2
                 msg(rtnmsg);
             }
         }
-        private void msg(string message)
-        {
-            MessageBox.Show(message);
-        }
-
-        /// <summary>
-        /// 获取BOM结构数据
-        /// author yfj,on 2022-06-02
-        /// </summary>
-        /// <param name="dg"></param>
-        /// <returns></returns>
-        private string GetBOMJson(DataGridView dg)
-        {
-            string strJson = string.Empty;
-            List<BomVO> dtos = new List<BomVO>();
-            foreach (DataGridViewRow row in dg.Rows)
-            {
-                string pInvCode = DataHelper.getStr(row.Cells["母件料品"].Value);
-                string pInvDesc = DataHelper.getStr(row.Cells["母件物料描述"].Value);
-                string pInvUnit = DataHelper.getStr(row.Cells["母件基本计量单位"].Value);
-                string pInvQty = DataHelper.getStr(row.Cells["母件用量"].Value);
-                BomVO dto = dtos.Find(t => t.itemcode.Equals(pInvCode));
-                if (dto == null)
-                {
-                    dto = new BomVO();
-                    dto.itemcode = pInvCode;
-                    dto.itemdesc = pInvDesc;
-                    dto.unit = pInvUnit;
-                    dto.qty = pInvQty;
-                    dto.private2 = DataHelper.getStr(row.Cells["工艺路线"].Value);
-                    dto.rows.Add(new BomLineVO(row));
-                    dtos.Add(dto);
-                }
-                else
-                {
-                    dto.rows.Add(new BomLineVO(row));
-                }
-            }
-            strJson = Newtonsoft.Json.JsonConvert.SerializeObject(dtos);//转json字符串
-            return strJson;
-        }
-
         private void toolStripButton4_Click(object sender, EventArgs e)
         {
-            DataGridView dg = Form1.dataGridView4;
+            DataGridView dg = dataGridView1;
             if (dg == null || dg.Rows.Count <= 0) return;
 
             //第一步  DataTalbe转BOM结构
@@ -423,9 +302,9 @@ namespace WindowsApplication2
             //    //}
             //}
             int cqqty = 0, zzqty = 0, xnqty = 0, gyqty = 0;
-            for (int iRow = 0; iRow < Form1.dataGridView4.Rows.Count; iRow++)
+            for (int iRow = 0; iRow < dataGridView1.Rows.Count; iRow++)
             {
-                string attribute = getstr(Form1.dataGridView4.Rows[iRow].Cells["料品形态属性"].Value);
+                string attribute = getstr(dataGridView1.Rows[iRow].Cells["料品形态属性"].Value);
                 if (attribute == "采购件")
                 {
                     cqqty++;
@@ -586,33 +465,6 @@ namespace WindowsApplication2
 
 
         }
-
-        /// <summary>
-        /// 调用U9Bom导入接口
-        /// </summary>
-        /// <param name="str"></param>
-        public static string PostCreatBom(string str)
-        {
-            string url = "http://localhost/U9/RestServices/YY.U9.Cust.APISV.IMainSV.svc/DO";
-            var client = new RestClient(url);
-            client.Timeout = -1;
-            var request = new RestRequest(Method.POST);
-            request.AddHeader("Content-Type", "application/json");
-            str = "" + str.Replace("\"", "\\\"") + "";
-            string EntCode = getstr(Login.u9ContentHt["OrgCode"]);//组织编码
-            string UserCode = getstr(Login.u9ContentHt["UserCode"]);//用户编码
-            string body = "{\"context\":{\"CultureName\":\"zh-CN\",\"EntCode\":\"01\",\"OrgCode\":\"" + EntCode + "\",\"UserCode\":\"" + UserCode + "\"},\"args\":\"" + str + "\",\"action\":\"CreateBom\"}";
-            //body.Replace("strorg", getstr(Login.u9ContentHt["OrgCode"]));
-            //body.Replace("struser", getstr(Login.u9ContentHt["UserCode"]));
-            request.AddParameter("application/json", body, ParameterType.RequestBody);
-            IRestResponse response = client.Execute(request);
-            return response.Content;
-        }
-
-        private static string getstr(object obj)
-        {
-            return obj == null ? "" : obj.ToString();
-        }
         private void toolStripButton5_Click(object sender, EventArgs e)
         {
             OpenFileDialog openFileDialog = new OpenFileDialog();
@@ -633,7 +485,113 @@ namespace WindowsApplication2
                 this.dataGridView2.DataSource = changedt_routing(dt);
             }
         }
+        #endregion
 
+
+
+
+
+        /// <summary> 
+        /// 从文件读取 Stream 
+        /// </summary> 
+        public Stream FileToStream(string fileName)
+        {
+            // 打开文件 
+            FileStream fileStream = new FileStream(fileName, FileMode.Open, FileAccess.Read, FileShare.Read);
+            // 读取文件的 byte[] 
+            byte[] bytes = new byte[fileStream.Length];
+            fileStream.Read(bytes, 0, bytes.Length);
+            fileStream.Close();
+            // 把 byte[] 转换成 Stream 
+            Stream stream = new MemoryStream(bytes);
+            return stream;
+        }
+
+        /// <summary>
+        /// 单元格样式设置
+        /// </summary>
+        /// <param name="dg"></param>
+        private void initDataGrid(DataGridView dg)
+        {
+            dg.Columns["序号"].Width = 50;
+            dg.Columns["展开层"].Width = 60;
+            dg.Columns["物料描述"].Width = 200;
+            dg.Columns["基本计量单位"].Width = 80;
+            dg.Columns["BOM用途"].Visible = false;
+            dg.Columns["物料类型"].Visible = false;
+            //dg.Columns["母件用量"].Visible = false;
+        }
+
+        private void msg(string message)
+        {
+            MessageBox.Show(message);
+        }
+
+
+        #region <<拼接数据方法和调用U9创建BOM接口>>
+        /// <summary>
+        /// 获取BOM结构数据
+        /// author yfj,on 2022-06-02
+        /// </summary>
+        /// <param name="dg"></param>
+        /// <returns></returns>
+        private string GetBOMJson(DataGridView dg)
+        {
+            string strJson = string.Empty;
+            List<BomVO> dtos = new List<BomVO>();
+            foreach (DataGridViewRow row in dg.Rows)
+            {
+                string pInvCode = DataHelper.getStr(row.Cells["母件料品"].Value);
+                string pInvDesc = DataHelper.getStr(row.Cells["母件物料描述"].Value);
+                string pInvUnit = DataHelper.getStr(row.Cells["母件基本计量单位"].Value);
+                string pInvQty = DataHelper.getStr(row.Cells["母件用量"].Value);
+                BomVO dto = dtos.Find(t => t.itemcode.Equals(pInvCode));
+                if (dto == null)
+                {
+                    dto = new BomVO();
+                    dto.itemcode = pInvCode;
+                    dto.itemdesc = pInvDesc;
+                    dto.unit = pInvUnit;
+                    dto.qty = pInvQty;
+                    dto.private2 = DataHelper.getStr(row.Cells["工艺路线"].Value);
+                    dto.rows.Add(new BomLineVO(row));
+                    dtos.Add(dto);
+                }
+                else
+                {
+                    dto.rows.Add(new BomLineVO(row));
+                }
+            }
+            strJson = Newtonsoft.Json.JsonConvert.SerializeObject(dtos);//转json字符串
+            return strJson;
+        }
+
+
+        /// <summary>
+        /// 调用U9Bom导入接口
+        /// </summary>
+        /// <param name="str"></param>
+        public static string PostCreatBom(string str)
+        {
+            string url = commUntil.GetConntionSetting("U9API");
+            //string url = "http://localhost/U9/RestServices/YY.U9.Cust.APISV.IMainSV.svc/DO";
+            var client = new RestClient(url);
+            client.Timeout = -1;
+            var request = new RestRequest(Method.POST);
+            request.AddHeader("Content-Type", "application/json");
+            str = "" + str.Replace("\"", "\\\"") + "";
+            string EntCode = getstr(Login.u9ContentHt["OrgCode"]);//上下文组织编码
+            string UserCode = getstr(Login.u9ContentHt["UserCode"]);//上下文用户编码
+            string body = "{\"context\":{\"CultureName\":\"zh-CN\",\"EntCode\":\"01\",\"OrgCode\":\"" + EntCode + "\",\"UserCode\":\"" + UserCode + "\"},\"args\":\"" + str + "\",\"action\":\"CreateBom\"}";
+            //body.Replace("strorg", getstr(Login.u9ContentHt["OrgCode"]));
+            //body.Replace("struser", getstr(Login.u9ContentHt["UserCode"]));
+            request.AddParameter("application/json", body, ParameterType.RequestBody);
+            IRestResponse response = client.Execute(request);
+            return response.Content;
+        }
+        #endregion
+
+        #region <<comboBox1事件集合>>
         private void comboBox1_DrawItem(object sender, DrawItemEventArgs e)
         {
             e.DrawBackground();
@@ -642,14 +600,37 @@ namespace WindowsApplication2
 
         private void comboBox1_SelectedIndexChanged(object sender, EventArgs e)
         {
-            if (dataGridView4.CurrentCell != null)
-                dataGridView4.CurrentCell.Value = comboBox1.Items[comboBox1.SelectedIndex];
+            if (dataGridView1.CurrentCell != null)
+                dataGridView1.CurrentCell.Value = comboBox1.Items[comboBox1.SelectedIndex];
+        }
+        #endregion
+
+        #region <<dataGridView1事件集合>>
+
+        /// <summary>
+        /// 修改物料描述字段修改
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void dataGridView1_CellEndEdit(object sender, DataGridViewCellEventArgs e)
+        {
+            int index = e.ColumnIndex;
+            string value = dataGridView1[e.ColumnIndex, e.RowIndex].Value?.ToString();
+            //如果是物料描述列修改  则进入新的form2
+            if (e.ColumnIndex != 8) return;
+            Form2 form2 = new Form2(value);
+            form2.Show();
         }
 
-        private void dataGridView4_CurrentCellChanged(object sender, EventArgs e)
+        /// <summary>
+        /// 料品形态属性字段修改
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void dataGridView1_CurrentCellChanged(object sender, EventArgs e)
         {
 
-            DataGridViewCell cell = dataGridView4.CurrentCell;
+            DataGridViewCell cell = dataGridView1.CurrentCell;
             if (cell == null) return;
 
             DataGridViewColumn column = cell.OwningColumn;
@@ -658,16 +639,16 @@ namespace WindowsApplication2
             if (column.Name.Equals("料品形态属性"))
             {
 
-                int columnIndex = dataGridView4.CurrentCell.ColumnIndex;
-                int rowIndex = dataGridView4.CurrentCell.RowIndex;
-                Point p = Form1.dataGridView4.Location;
-                Rectangle rect = dataGridView4.GetCellDisplayRectangle(columnIndex, rowIndex, false);
+                int columnIndex = dataGridView1.CurrentCell.ColumnIndex;
+                int rowIndex = dataGridView1.CurrentCell.RowIndex;
+                Point p = dataGridView1.Location;
+                Rectangle rect = dataGridView1.GetCellDisplayRectangle(columnIndex, rowIndex, false);
                 comboBox1.Left = rect.Left + p.X + 3;
-                comboBox1.Top = rect.Top + p.Y + dataGridView4.ColumnHeadersHeight + rect.Height;
+                comboBox1.Top = rect.Top + p.Y + dataGridView1.ColumnHeadersHeight + rect.Height;
                 comboBox1.Width = rect.Width;
                 comboBox1.Height = rect.Height;
                 //将单元格的内容显示为下拉列表的当前项
-                string consultingRoom = dataGridView4.Rows[rowIndex].Cells[columnIndex].Value.ToString();
+                string consultingRoom = dataGridView1.Rows[rowIndex].Cells[columnIndex].Value.ToString();
                 int index = comboBox1.Items.IndexOf(consultingRoom);
 
                 comboBox1.SelectedIndex = index;
@@ -690,22 +671,13 @@ namespace WindowsApplication2
         //    {
 
         //    }
-        private void dataGridView4_CellValueChanged(object sender, DataGridViewCellEventArgs e)
+        private void dataGridView1_CellValueChanged(object sender, DataGridViewCellEventArgs e)
         {
 
         }
 
-        private void dataGridView4_CellEndEdit(object sender, DataGridViewCellEventArgs e)
-        {
-            int index = e.ColumnIndex;
-            string value = dataGridView4[e.ColumnIndex, e.RowIndex].Value?.ToString();
-            //如果是物料描述列修改  则进入新的form2
-            if (e.ColumnIndex != 8) return;
-            Form2 form2 = new Form2(value);
-            form2.Show();
-        }
 
-        private void dataGridView4_KeyDown(object sender, KeyEventArgs e)
+        private void dataGridView1_KeyDown(object sender, KeyEventArgs e)
         {
             if (e.KeyCode == Keys.Enter)
             {
@@ -714,7 +686,7 @@ namespace WindowsApplication2
             }
         }
 
-        private void dataGridView4_CellContentClick(object sender, DataGridViewCellEventArgs e)
+        private void dataGridView1_CellContentClick(object sender, DataGridViewCellEventArgs e)
         {
 
         }
@@ -723,5 +695,67 @@ namespace WindowsApplication2
         {
 
         }
+        #endregion
+
+        #region <<防止NULL异常>>
+
+        private static string getstr(object obj)
+        {
+            return obj == null ? "" : obj.ToString();
+        }
+
+
+        private long getlong(object obj)
+        {
+            long lg = 0;
+            if (obj != null)
+            {
+                long.TryParse(obj.ToString(), out lg);
+            }
+            return lg;
+        }
+        private bool getbool(object obj)
+        {
+            bool lg = false;
+            if (obj != null)
+            {
+                bool.TryParse(obj.ToString(), out lg);
+            }
+            return lg;
+        }
+        private decimal getdecimal(object obj)
+        {
+            decimal lg = 0;
+            if (obj != null)
+            {
+                decimal.TryParse(obj.ToString(), out lg);
+            }
+            return lg;
+        }
+        private int getint(object obj)
+        {
+            int lg = 0;
+            if (obj != null)
+            {
+                int.TryParse(obj.ToString(), out lg);
+            }
+            return lg;
+        }
+        private int getgiftint(object obj)
+        {
+            int lg = 0;
+            if (obj != null)
+            {
+                int.TryParse(obj.ToString(), out lg);
+            }
+            else
+            {
+                lg = -1;
+            }
+            return lg;
+        }
+
+        #endregion
+
     }
 }
