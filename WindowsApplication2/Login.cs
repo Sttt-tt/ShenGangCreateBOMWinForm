@@ -233,7 +233,11 @@ namespace WindowsApplication2
             }
             else
             {
-                DataTable dt = MiddleDBInterface.getdt("select a.Code,b.Name,a.ID from Base_Organization a join Base_Organization_Trl b on a.ID=b.ID join Base_UserOrg c on c.Org=a.ID join Base_User d on c.[User]=d.ID where d.Code='" + this.textBoxX1.Text.Trim() + "'", MiddleDBInterface.conn(strConn));
+                DataTable dt = MiddleDBInterface.getdt(@"select a.Code,b.Name,a.ID from Base_Organization a 
+join Base_Organization_Trl b on a.ID=b.ID 
+join Base_UserOrg c on c.Org=a.ID 
+join Base_User d on c.[User]=d.ID 
+where d.Code='" + this.textBoxX1.Text.Trim() + "'", MiddleDBInterface.conn(strConn));
                 ht_org.Clear();
                 this.comboBox1.Items.Clear();
                 foreach (DataRow var1 in dt.Rows)

@@ -12,6 +12,8 @@ using System.Threading;
 using www.ufida.org.EntityData;
 using System.Text.RegularExpressions;
 using RestSharp;
+using WindowsApplication2.VO;
+using WindowsApplication2.Helper;
 
 namespace WindowsApplication2
 {
@@ -20,7 +22,11 @@ namespace WindowsApplication2
         public Form1()
         {
             InitializeComponent();
+            //this.tabControl1.Visible = false;
+            this.tabControl1.TabPages.Remove(this.tabPage2);
+            //this.tabControl1.TabPages.AddRange(this.tabPage1);
         }
+
         private DataTable changedt_bom(DataTable dt)
         {
             for (int i = dt.Rows.Count - 1; i >= 0; i--)
@@ -79,6 +85,12 @@ namespace WindowsApplication2
             }
             return dt;
         }
+
+        /// <summary>
+        /// 上锅物料清单导入按钮
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void toolStripButton1_Click(object sender, EventArgs e)
         {
             OpenFileDialog openFileDialog = new OpenFileDialog();
@@ -104,9 +116,22 @@ namespace WindowsApplication2
             //DataTable dt = ReadExcelToDataSet.ImportDataTableFromExcel(myStream, 0, 3, true);
             ExcelHelper excelHelper = new ExcelHelper(openFileDialog.FileName);
             DataTable dt = excelHelper.ExcelToDataTable2(0);
-            //this.dataGridView1.DataSource = changedt_bom(dt);
-            this.dataGridView1.DataSource = dt;
+            //Form1.dataGridView4.DataSource = changedt_bom(dt);
+            Form1.dataGridView4.DataSource = dt;
+            initDataGrid(Form1.dataGridView4);
         }
+
+        private void initDataGrid(DataGridView dg)
+        {
+            dg.Columns["序号"].Width = 50;
+            dg.Columns["展开层"].Width = 60;
+            dg.Columns["物料描述"].Width = 200;
+            dg.Columns["基本计量单位"].Width = 80;
+            dg.Columns["BOM用途"].Visible = false;
+            dg.Columns["物料类型"].Visible = false;
+            //dg.Columns["母件用量"].Visible = false;
+        }
+
         /// <summary> 
         /// 从文件读取 Stream 
         /// </summary> 
@@ -190,7 +215,7 @@ namespace WindowsApplication2
             }
             return lg;
         }
-        
+
         #endregion
         private FlexCell.Grid grid1 = new FlexCell.Grid();
         private void toolStripButton3_Click(object sender, EventArgs e)
@@ -254,9 +279,51 @@ namespace WindowsApplication2
             MessageBox.Show(message);
         }
 
+        /// <summary>
+        /// 获取BOM结构数据
+        /// author yfj,on 2022-06-02
+        /// </summary>
+        /// <param name="dg"></param>
+        /// <returns></returns>
+        private string GetBOMJson(DataGridView dg)
+        {
+            string strJson = string.Empty;
+            List<BomVO> dtos = new List<BomVO>();
+            foreach (DataGridViewRow row in dg.Rows)
+            {
+                string pInvCode = DataHelper.getStr(row.Cells["母件料品"].Value);
+                string pInvDesc = DataHelper.getStr(row.Cells["母件物料描述"].Value);
+                string pInvUnit = DataHelper.getStr(row.Cells["母件基本计量单位"].Value);
+                string pInvQty = DataHelper.getStr(row.Cells["母件用量"].Value);
+                BomVO dto = dtos.Find(t => t.itemcode.Equals(pInvCode));
+                if (dto == null)
+                {
+                    dto = new BomVO();
+                    dto.itemcode = pInvCode;
+                    dto.itemdesc = pInvDesc;
+                    dto.unit = pInvUnit;
+                    dto.qty = pInvQty;
+                    dto.private2 = DataHelper.getStr(row.Cells["工艺路线"].Value);
+                    dto.rows.Add(new BomLineVO(row));
+                    dtos.Add(dto);
+                }
+                else
+                {
+                    dto.rows.Add(new BomLineVO(row));
+                }
+            }
+            strJson = Newtonsoft.Json.JsonConvert.SerializeObject(dtos);//转json字符串
+            return strJson;
+        }
 
         private void toolStripButton4_Click(object sender, EventArgs e)
         {
+            DataGridView dg = Form1.dataGridView4;
+            if (dg == null || dg.Rows.Count <= 0) return;
+
+            //第一步  DataTalbe转BOM结构
+            string strJson = GetBOMJson(dg);
+
             string CommandType = "CreateBOM";
             List<www.ufida.org.EntityData.UFIDAU9CustCommonAPISVDocDTOData> dictdtos = new List<UFIDAU9CustCommonAPISVDocDTOData>();
             Dictionary<string, Hashtable> dic = new Dictionary<string, Hashtable>();
@@ -266,9 +333,9 @@ namespace WindowsApplication2
             string rtnmsg = "";
             #region 物料清单
             //Hashtable bomHt = new Hashtable();
-            //for (int iRow = 0; iRow < this.dataGridView1.Rows.Count; iRow++)
+            //for (int iRow = 0; iRow < Form1.dataGridView4.Rows.Count; iRow++)
             //{
-            //    string strBomJC = this.dataGridView1.Rows[iRow].Cells[1].ToString();
+            //    string strBomJC = Form1.dataGridView4.Rows[iRow].Cells[1].ToString();
 
 
             //}
@@ -280,11 +347,11 @@ namespace WindowsApplication2
 
             //StringBuilder errSb = new StringBuilder();
             //errSb.Insert(0, "");
-            //for (int iRow = 0; iRow < this.dataGridView1.Rows.Count; iRow++)//循环dt,添加“部门”的子节点
+            //for (int iRow = 0; iRow < Form1.dataGridView4.Rows.Count; iRow++)//循环dt,添加“部门”的子节点
             //{
             //    int rowNum = iRow + 1;
 
-            //    key = getstr(this.dataGridView1.Rows[iRow].Cells[0].Value);
+            //    key = getstr(Form1.dataGridView4.Rows[iRow].Cells[0].Value);
             //    if (key == "")
             //    {
             //        errSb.AppendLine(rowNum + "行层级为空！");
@@ -311,63 +378,94 @@ namespace WindowsApplication2
 
             #endregion
 
-            //便利获得所有母件
-            for (int iRow = 0; iRow < this.dataGridView1.Rows.Count; iRow++)
-            {
-               string Itemmaster = getstr(this.dataGridView1.Rows[iRow].Cells[10].Value);
-                if (!MasterItemMasters.Contains(Itemmaster)) MasterItemMasters.Add(Itemmaster);
-            }
-            //便利所有母件  将该母件的所有子键添加到str中创建bom
-            foreach (string MasterItemMaster in MasterItemMasters)
-            {
-                string str = string.Empty;
-                for (int iRow = 0; iRow < this.dataGridView1.Rows.Count; iRow++)
-                {
-                    string Itemmaster = getstr(this.dataGridView1.Rows[iRow].Cells[10].Value);
-                    string ComponentItem = getstr(this.dataGridView1.Rows[iRow].Cells[3].Value);
-                    if (MasterItemMaster == Itemmaster)
-                    {
-                        str += "{";
-                        str += "'LineNum':'" + (iRow+1)*10 + "'" + ",";//行号
-                        str += "'BOM':'" + MasterItemMaster + "'" + ",";//母件料品
-                        str += "'BOMC':'" + ComponentItem + "'" + ",";//料品子件
-                        str += "'ComponentItemName':'" + getstr(this.dataGridView1.Rows[iRow].Cells[4].Value) + "'" + ",";//料品名称
-                        str += "'ItemAttribute':'" + getstr(this.dataGridView1.Rows[iRow].Cells[11].Value) + "'" + ",";//料品形态属性
-                        str += "'BomUse':'" + getstr(this.dataGridView1.Rows[iRow].Cells[5].Value) + "'" + ",";//bom用途
-                        str += "'ItemCatagory':'" + getstr(this.dataGridView1.Rows[iRow].Cells[6].Value) + "'" + ",";//物料分类
-                        str += "'UMO':'" + getstr(this.dataGridView1.Rows[iRow].Cells[7].Value) + "'" + ",";//计量单位
-                        str += "'Qty':'" + getstr(this.dataGridView1.Rows[iRow].Cells[8].Value) + "'" + ",";//数量
-                        str += "'Router':'" + getstr(this.dataGridView1.Rows[iRow].Cells[12].Value) + "'" + ",";//工艺路线
-                        str += "'Size':'" + getstr(this.dataGridView1.Rows[iRow].Cells[9].Value) + "'";//尺寸
-                        str += "},";
-                    }
-                }
-                str = str.Substring(0, str.Length - 1);
-                str = "[" + str + "]";
 
-                //将字符串传给u9   
-                rtnmsg =PostCreatBom(str);
-                if (rtnmsg!="{\"d\":\"\"}")
+
+
+            ////便利获得所有母件
+            //for (int iRow = 0; iRow < Form1.dataGridView4.Rows.Count; iRow++)
+            //{
+            //   string Itemmaster = getstr(Form1.dataGridView4.Rows[iRow].Cells[10].Value);
+            //    if (!MasterItemMasters.Contains(Itemmaster)) MasterItemMasters.Add(Itemmaster);
+            //}
+            ////便利所有母件  将该母件的所有子键添加到str中创建bom
+            //foreach (string MasterItemMaster in MasterItemMasters)
+            //{
+            //    string str = string.Empty;
+            //    for (int iRow = 0; iRow < Form1.dataGridView4.Rows.Count; iRow++)
+            //    {
+            //        string Itemmaster = getstr(Form1.dataGridView4.Rows[iRow].Cells[10].Value);
+            //        string ComponentItem = getstr(Form1.dataGridView4.Rows[iRow].Cells[3].Value);
+            //        if (MasterItemMaster == Itemmaster)
+            //        {
+            //            str += "{";
+            //            str += "'LineNum':'" + (iRow+1)*10 + "'" + ",";//行号
+            //            str += "'BOM':'" + MasterItemMaster + "'" + ",";//母件料品
+            //            str += "'BOMC':'" + ComponentItem + "'" + ",";//料品子件
+            //            str += "'ComponentItemName':'" + getstr(Form1.dataGridView4.Rows[iRow].Cells[4].Value) + "'" + ",";//料品名称
+            //            str += "'ItemAttribute':'" + getstr(Form1.dataGridView4.Rows[iRow].Cells[11].Value) + "'" + ",";//料品形态属性
+            //            str += "'BomUse':'" + getstr(Form1.dataGridView4.Rows[iRow].Cells[5].Value) + "'" + ",";//bom用途
+            //            str += "'ItemCatagory':'" + getstr(Form1.dataGridView4.Rows[iRow].Cells[6].Value) + "'" + ",";//物料分类
+            //            str += "'UMO':'" + getstr(Form1.dataGridView4.Rows[iRow].Cells[7].Value) + "'" + ",";//计量单位
+            //            str += "'Qty':'" + getstr(Form1.dataGridView4.Rows[iRow].Cells[8].Value) + "'" + ",";//数量
+            //            str += "'Router':'" + getstr(Form1.dataGridView4.Rows[iRow].Cells[12].Value) + "'" + ",";//工艺路线
+            //            str += "'Size':'" + getstr(Form1.dataGridView4.Rows[iRow].Cells[9].Value) + "'";//尺寸
+            //            str += "},";
+            //        }
+            //    }
+            //    str = str.Substring(0, str.Length - 1);
+            //    str = "[" + str + "]";
+            rtnmsg = PostCreatBom(strJson);
+            //    //将字符串传给u9   需一次性导入，只调一次接口
+            //    //rtnmsg =PostCreatBom(str);
+            //    //if (rtnmsg!="{\"d\":\"\"}")
+            //    //{
+            //    //    msg(rtnmsg);
+            //    //}
+            //}
+            int cqqty = 0, zzqty = 0, xnqty = 0, gyqty = 0;
+            for (int iRow = 0; iRow < Form1.dataGridView4.Rows.Count; iRow++)
+            {
+                string attribute = getstr(Form1.dataGridView4.Rows[iRow].Cells["料品形态属性"].Value);
+                if (attribute == "采购件")
                 {
-                    msg(rtnmsg);
+                    cqqty++;
+                }
+                else if (attribute == "制造件")
+                {
+                    zzqty++;
+                }
+                else if (attribute == "虚拟")
+                {
+                    xnqty++;
+                }
+                else if (attribute == "工艺")
+                {
+                    gyqty++;
                 }
             }
-            msg("创建bom成功");
+            if (rtnmsg != "{\"d\":\"\"}")
+            {
+                msg("创建失败：" + rtnmsg);
+            }
+            else
+            {
+                msg("创建bom成功,共导入采购件" + cqqty + "件,制造件" + zzqty + "件,虚拟件" + xnqty + "件,工艺件" + gyqty + "件");
+            }
             #region<<demo>>
-            //for (int iRow = 0; iRow < this.dataGridView1.Rows.Count; iRow++)//循环dt,添加“部门”的子节点
+            //for (int iRow = 0; iRow < Form1.dataGridView4.Rows.Count; iRow++)//循环dt,添加“部门”的子节点
             //{
 
             //    int rowNum = iRow + 1;
             //    string damicstr = "";
-            //    key = getstr(this.dataGridView1.Rows[iRow].Cells[0].Value);
+            //    key = getstr(Form1.dataGridView4.Rows[iRow].Cells[0].Value);
 
 
             //    string cellContent = string.Empty;
-            //    for (int iCol = 0; iCol < this.dataGridView1.Columns.Count; iCol++)
+            //    for (int iCol = 0; iCol < Form1.dataGridView4.Columns.Count; iCol++)
             //    {
 
 
-            //        cellContent = getstr(this.dataGridView1.Rows[iRow].Cells[iCol].Value);
+            //        cellContent = getstr(Form1.dataGridView4.Rows[iRow].Cells[iCol].Value);
             //        damicstr += cellContent + "|";
             //    }
             //    if (!damicht.ContainsKey(key))
@@ -384,23 +482,23 @@ namespace WindowsApplication2
 
 
             //    string dickey = key;
-            //    for (int iRowc = 0; iRowc < this.dataGridView1.Rows.Count; iRowc++)
+            //    for (int iRowc = 0; iRowc < Form1.dataGridView4.Rows.Count; iRowc++)
             //    {
 
-            //        if (getstr(this.dataGridView1.Rows[iRowc].Cells[0].Value) == "1")
+            //        if (getstr(Form1.dataGridView4.Rows[iRowc].Cells[0].Value) == "1")
             //            continue;
-            //        int t = getstr(this.dataGridView1.Rows[iRowc].Cells[0].Value).LastIndexOf('.');
-            //        t = getstr(this.dataGridView1.Rows[iRowc].Cells[0].Value).Length - t;
+            //        int t = getstr(Form1.dataGridView4.Rows[iRowc].Cells[0].Value).LastIndexOf('.');
+            //        t = getstr(Form1.dataGridView4.Rows[iRowc].Cells[0].Value).Length - t;
             //        string hashkey = "1";
-            //        //string hashkey = getstr(this.dataGridView1.Rows[iRowc].Cells[0].Value).Substring(0, getstr(this.dataGridView1.Rows[iRowc].Cells[0].Value).Length - t);
+            //        //string hashkey = getstr(Form1.dataGridView4.Rows[iRowc].Cells[0].Value).Substring(0, getstr(Form1.dataGridView4.Rows[iRowc].Cells[0].Value).Length - t);
 
             //        if (hashkey == dickey)
             //        {
             //            string str = "";
-            //            string htkey = getstr(this.dataGridView1.Rows[iRowc].Cells[0].Value).ToString();
-            //            for (int iCol = 0; iCol < this.dataGridView1.ColumnCount; iCol++)
+            //            string htkey = getstr(Form1.dataGridView4.Rows[iRowc].Cells[0].Value).ToString();
+            //            for (int iCol = 0; iCol < Form1.dataGridView4.ColumnCount; iCol++)
             //            {
-            //                cellContent = getstr(this.dataGridView1.Rows[iRowc].Cells[iCol].Value);
+            //                cellContent = getstr(Form1.dataGridView4.Rows[iRowc].Cells[iCol].Value);
             //                str += cellContent + "|";
             //            }
             //            if (!ht.ContainsKey(htkey))
@@ -500,29 +598,12 @@ namespace WindowsApplication2
             client.Timeout = -1;
             var request = new RestRequest(Method.POST);
             request.AddHeader("Content-Type", "application/json");
-            //var body = @"{
-            //" + "\n" +
-            //            @"    ""context"": {
-            //" + "\n" +
-            //            @"        ""CultureName"": ""zh-CN"",
-            //" + "\n" +
-            //            @"        ""EntCode"": ""001"",
-            //" + "\n" +
-            //            @"        ""OrgCode"": ""01"",
-            //" + "\n" +
-            //            @"        ""UserCode"": ""admin""
-            //" + "\n" +
-            //            @"    },
-            //" + "\n" +
-            //            @"    ""args"": ""{'DocNO':'TEF2021050057','DocType':'TransferForm'}"",
-            //" + "\n" +
-            //            @"    ""action"": ""CreateBom""
-            //" + "\n" +
-            //            @"}";
-
-            string body = "{\"context\":{\"CultureName\":\"zh-CN\",\"EntCode\":\"01\",\"OrgCode\":\"01\",\"UserCode\":\"admin\"},\"args\":\"" + str + "\",\"action\":\"CreateBom\"}";
-            body.Replace("strorg", getstr(Login.u9ContentHt["OrgCode"]));
-            body.Replace("struser", getstr(Login.u9ContentHt["UserCode"]));
+            str = "" + str.Replace("\"", "\\\"") + "";
+            string EntCode = getstr(Login.u9ContentHt["OrgCode"]);//组织编码
+            string UserCode = getstr(Login.u9ContentHt["UserCode"]);//用户编码
+            string body = "{\"context\":{\"CultureName\":\"zh-CN\",\"EntCode\":\"01\",\"OrgCode\":\"" + EntCode + "\",\"UserCode\":\"" + UserCode + "\"},\"args\":\"" + str + "\",\"action\":\"CreateBom\"}";
+            //body.Replace("strorg", getstr(Login.u9ContentHt["OrgCode"]));
+            //body.Replace("struser", getstr(Login.u9ContentHt["UserCode"]));
             request.AddParameter("application/json", body, ParameterType.RequestBody);
             IRestResponse response = client.Execute(request);
             return response.Content;
@@ -551,6 +632,96 @@ namespace WindowsApplication2
                 if (dt == null || dt.Rows.Count == 0) return;
                 this.dataGridView2.DataSource = changedt_routing(dt);
             }
+        }
+
+        private void comboBox1_DrawItem(object sender, DrawItemEventArgs e)
+        {
+            e.DrawBackground();
+            e.Graphics.DrawString(comboBox1.Items[e.Index].ToString(), e.Font, Brushes.Black, e.Bounds, StringFormat.GenericDefault);
+        }
+
+        private void comboBox1_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            if (dataGridView4.CurrentCell != null)
+                dataGridView4.CurrentCell.Value = comboBox1.Items[comboBox1.SelectedIndex];
+        }
+
+        private void dataGridView4_CurrentCellChanged(object sender, EventArgs e)
+        {
+
+            DataGridViewCell cell = dataGridView4.CurrentCell;
+            if (cell == null) return;
+
+            DataGridViewColumn column = cell.OwningColumn;
+
+            //如果是要显示下拉列表的列的话
+            if (column.Name.Equals("料品形态属性"))
+            {
+
+                int columnIndex = dataGridView4.CurrentCell.ColumnIndex;
+                int rowIndex = dataGridView4.CurrentCell.RowIndex;
+                Point p = Form1.dataGridView4.Location;
+                Rectangle rect = dataGridView4.GetCellDisplayRectangle(columnIndex, rowIndex, false);
+                comboBox1.Left = rect.Left + p.X + 3;
+                comboBox1.Top = rect.Top + p.Y + dataGridView4.ColumnHeadersHeight + rect.Height;
+                comboBox1.Width = rect.Width;
+                comboBox1.Height = rect.Height;
+                //将单元格的内容显示为下拉列表的当前项
+                string consultingRoom = dataGridView4.Rows[rowIndex].Cells[columnIndex].Value.ToString();
+                int index = comboBox1.Items.IndexOf(consultingRoom);
+
+                comboBox1.SelectedIndex = index;
+                comboBox1.Visible = true;
+            }
+            else
+            {
+                comboBox1.Visible = false;
+            }
+        }
+
+
+        //DataGridViewCell cell = dataGridView4.CurrentCell;
+        //    if (cell == null) return;
+
+        //    DataGridViewColumn column = cell.OwningColumn;
+
+        //    //如果是要显示下拉列表的列的话
+        //    if (column.Name.Equals("物料描述"))
+        //    {
+
+        //    }
+        private void dataGridView4_CellValueChanged(object sender, DataGridViewCellEventArgs e)
+        {
+
+        }
+
+        private void dataGridView4_CellEndEdit(object sender, DataGridViewCellEventArgs e)
+        {
+            int index = e.ColumnIndex;
+            string value = dataGridView4[e.ColumnIndex, e.RowIndex].Value?.ToString();
+            //如果是物料描述列修改  则进入新的form2
+            if (e.ColumnIndex != 8) return;
+            Form2 form2 = new Form2(value);
+            form2.Show();
+        }
+
+        private void dataGridView4_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.KeyCode == Keys.Enter)
+            {
+                e.Handled = true;
+                //e.SuppressKeyPress = true;
+            }
+        }
+
+        private void dataGridView4_CellContentClick(object sender, DataGridViewCellEventArgs e)
+        {
+
+        }
+
+        private void toolStripButton6_Click(object sender, EventArgs e)
+        {
+
         }
     }
 }

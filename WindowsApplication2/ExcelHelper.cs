@@ -8,6 +8,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using WindowsApplication2.Helper;
 
 namespace WindowsApplication2
 {
@@ -192,6 +193,14 @@ namespace WindowsApplication2
             }
         }
 
+
+
+
+        /// <summary>
+        /// 拼接上过datagridview数据
+        /// </summary>
+        /// <param name="index"></param>
+        /// <returns></returns>
         public DataTable ExcelToDataTable2(int index)
         {
             //实例化DataTable来存放数据
@@ -227,10 +236,12 @@ namespace WindowsApplication2
                         sheet = workbook.GetSheetAt(0);
                     }
                 }
-
+                sheet.RemoveColumnBreak(5);
                 //获取表头
                 IRow header = sheet.GetRow(sheet.FirstRowNum);
                 int startRow = 0;//数据的第一行索引
+
+
                 if (isColumnName)//表示第一行是列名
                 {
                     startRow = sheet.FirstRowNum + 1;//数据从第二行开始读
@@ -242,11 +253,19 @@ namespace WindowsApplication2
                         if (cell != null)
                         {
                             //获取列名的值
-                            string cellValue = cell.ToString();
-                            if (cellValue != null)
+                            string colName = cell.ToString();
+
+                            if (colName != null)
                             {
-                                DataColumn col = new DataColumn(cellValue);
+                                DataColumn col = new DataColumn(colName);
                                 dt.Columns.Add(col);
+                                if (colName == "展开层")
+                                {
+                                    dt.Columns.Add("母件料品");
+                                    dt.Columns.Add("母件物料描述");
+                                    dt.Columns.Add("母件基本计量单位");
+                                    dt.Columns.Add("母件用量");
+                                }
                             }
                             else
                             {
@@ -255,9 +274,10 @@ namespace WindowsApplication2
                             }
                         }
                     }
-                    dt.Columns.Add("母件料品");
+                    //dt.Columns.Add("母件料品");
                     dt.Columns.Add("料品形态属性");
                     dt.Columns.Add("工艺路线");
+                    dt.Columns.Add("备注");
                 }
 
 
@@ -265,16 +285,21 @@ namespace WindowsApplication2
                 for (int i = startRow; i <= sheet.LastRowNum; i++)
                 {
                     IRow row = sheet.GetRow(i);
+
                     if (row == null)
                     {
                         continue;
                     }
+
                     DataRow dr = dt.NewRow();
+                    int k = 0;
                     for (int j = row.FirstCellNum; j < row.LastCellNum; j++)
                     {
+
+                        k = j >= 3 ? j + 4 : j;
                         if (row.GetCell(j) != null)
                         {
-                            dr[j] = row.GetCell(j).ToString();
+                            dr[k] = row.GetCell(j).ToString();
                         }
 
                     }
@@ -282,48 +307,87 @@ namespace WindowsApplication2
                 }
             }
 
-            dt.DefaultView.Sort = "展开层 asc";
-            List<int> levels = new List<int>();
-            foreach(DataRow row1 in dt.Rows)
-            {
-                int level = Convert.ToInt32(row1["展开层"]);
-                if (!levels.Contains(level)) levels.Add(level);
-            }
-            int maxlevel = levels.Max();
+            dt.DefaultView.Sort = "母件料品 asc, 展开层 asc";
+            //List<int> levels = new List<int>();
+            //foreach (DataRow row1 in dt.Rows)
+            //{
+            //    int level = Convert.ToInt32(row1["展开层"]);
+            //    if (!levels.Contains(level)) levels.Add(level);
+            //}
+            //int maxlevel = levels.Max();
             foreach (DataRow row1 in dt.Rows)
             {
                 int level = Convert.ToInt32(row1["展开层"]);
-                if (level == 1)
-                {
-                    row1["母件料品"] = row1["WBS"];
-                }
-                else
-                {
-                    
-                    for (int xuhao = Convert.ToInt32(row1["序号"])-1; xuhao >= 0; xuhao--)
-                    {
-                        DataRow temprow = dt.Rows[xuhao];
-                        int templevel =Convert.ToInt32(temprow["展开层"]);
-                        if (!string.IsNullOrEmpty(Convert.ToString(row1["母件料品"]))) continue;
-                        if (templevel + 1 == level)
-                        {
-                            row1["母件料品"] = temprow["物料编码"];
-                        }
-                    }
+                //if (level == 1)
+                //{
+                //    //row1["母件料品"] = row1["WBS"];
+                //}
+                //else
+                //{
 
+                for (int xuhao = Convert.ToInt32(row1["序号"]) - 1; xuhao >= 0; xuhao--)
+                {
+                    DataRow temprow = dt.Rows[xuhao];
+                    int templevel = Convert.ToInt32(temprow["展开层"]);
+                    if (!string.IsNullOrEmpty(Convert.ToString(row1["母件料品"]))) continue;
+                    if (templevel + 1 == level)
+                    {
+                        row1["母件料品"] = temprow["物料编码"];
+                        row1["母件物料描述"] = temprow["物料描述"];
+                        row1["母件基本计量单位"] = temprow["基本计量单位"];
+                        row1["母件用量"] = temprow["数量/重量"];
+                    }
                 }
-                if (level == maxlevel)
+
+                int count = dt.Rows.Count;
+                if (Convert.ToInt32(row1["序号"]) == count)
                 {
                     row1["料品形态属性"] = "采购件";
                 }
                 else
                 {
-                    row1["料品形态属性"] = "制造件";
+                    int xh = Convert.ToInt32(row1["序号"]) - 1;//当前行序号
+                    DataRow nowrow = dt.Rows[xh];//当前下一行的值
+                    int nowzkc = Convert.ToInt32(nowrow["展开层"]);//下一行展开层
+                    DataRow nextrow = dt.Rows[xh + 1];//当前下一行的值
+                    int nextzkc = Convert.ToInt32(nextrow["展开层"]);//下一行展开层
+                                                                  //}
+                    if (nextzkc < nowzkc)
+                    {
+                        row1["料品形态属性"] = "采购件";
+                    }
+                    else
+                    {
+                        row1["料品形态属性"] = "制造件";
+                    }
                 }
+
             }
+            dt = DeleteRow(dt);
             dt.DefaultView.Sort = "母件料品 asc";
             return dt;
         }
+
+
+        /// <summary>
+        /// 删除展开层是1的行
+        /// </summary>
+        /// <param name="dataTable"></param>
+        /// <returns></returns>
+        protected DataTable DeleteRow(DataTable dataTable)
+        {
+            DataRow[] foundRow;
+            foundRow = dataTable.Select("展开层= '1'");
+            foreach (DataRow item in foundRow)
+            {
+                dataTable.Rows.Remove(item);
+            }
+            //dataTable.Rows.Remove(foundRow);//注意foundRow 可能为多行，需要循环执行。
+            dataTable.AcceptChanges();//对DataTable（全部）操作完之后，一定要执行这一步，否则结果不保存
+            return dataTable;
+        }
+
+
 
         public void Dispose()
         {
@@ -345,5 +409,6 @@ namespace WindowsApplication2
                 disposed = true;
             }
         }
+
     }
 }

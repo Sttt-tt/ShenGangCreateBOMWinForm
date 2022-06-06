@@ -66,8 +66,8 @@
             this.textBoxX1.Name = "textBoxX1";
             this.textBoxX1.Size = new System.Drawing.Size(243, 21);
             this.textBoxX1.TabIndex = 0;
-            this.textBoxX1.Leave += new System.EventHandler(this.textBoxX1_Leave);
             this.textBoxX1.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.textBoxX1_KeyPress);
+            this.textBoxX1.Leave += new System.EventHandler(this.textBoxX1_Leave);
             // 
             // textBoxX2
             // 
@@ -93,7 +93,7 @@
             this.lkSqlConfig.Font = new System.Drawing.Font("宋体", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
             this.lkSqlConfig.Location = new System.Drawing.Point(172, 217);
             this.lkSqlConfig.Name = "lkSqlConfig";
-            this.lkSqlConfig.Size = new System.Drawing.Size(88, 16);
+            this.lkSqlConfig.Size = new System.Drawing.Size(109, 20);
             this.lkSqlConfig.TabIndex = 6;
             this.lkSqlConfig.TabStop = true;
             this.lkSqlConfig.Text = "数据库配置";
@@ -121,7 +121,7 @@
             this.MinimizeBox = false;
             this.Name = "Login";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
-            this.Text = "基础数据导入";
+            this.Text = "申港基础数据导入";
             this.Load += new System.EventHandler(this.Login_Load);
             this.ResumeLayout(false);
             this.PerformLayout();
