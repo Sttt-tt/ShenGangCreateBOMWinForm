@@ -351,7 +351,15 @@ namespace WindowsApplication2
                     }
                     else
                     {
-                        row1["料品形态属性"] = "制造件";
+                        if (Convert.ToString(row1["物料编码"]).StartsWith("0"))
+                        {
+                            row1["料品形态属性"] = "采购件";
+                        }
+                        else
+                        {
+                            row1["料品形态属性"] = "制造件";
+                        }
+
                     }
                 }
 
