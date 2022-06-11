@@ -304,7 +304,13 @@ namespace WindowsApplication2
 
             if (rtnmsg != "{\"d\":\"\"}")
             {
-                msg("创建失败：" + rtnmsg);
+                if (rtnmsg.Contains("项目已存在"))
+                {
+                    return;
+                }
+                {
+                    msg("创建失败：" + rtnmsg);
+                }
             }
             else
             {
