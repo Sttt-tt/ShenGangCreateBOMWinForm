@@ -300,7 +300,7 @@ namespace WindowsApplication2
                 }
             }
 
-            dt.DefaultView.Sort = "母件料品 asc, 展开层 asc";
+            //dt.DefaultView.Sort = "母件料品 asc, 展开层 asc";
             //List<int> levels = new List<int>();
             //foreach (DataRow row1 in dt.Rows)
             //{
@@ -365,7 +365,7 @@ namespace WindowsApplication2
 
             }
             dt = DeleteRow(dt);
-            dt.DefaultView.Sort = "母件料品 asc";
+            dt.DefaultView.Sort = "母件料品 asc,物料描述 asc";
             return dt;
         }
 

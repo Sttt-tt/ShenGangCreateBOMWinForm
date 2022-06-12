@@ -147,6 +147,7 @@
     <Compile Include="NoSortHashTable.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="VO\BomKey.cs" />
     <Compile Include="VO\BomVO.cs" />
     <EmbeddedResource Include="Form1.resx">
       <SubType>Designer</SubType>

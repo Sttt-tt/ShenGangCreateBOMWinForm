@@ -121,9 +121,98 @@ namespace WindowsApplication2
             ExcelHelper excelHelper = new ExcelHelper(openFileDialog.FileName);
             DataTable dt = excelHelper.ExcelToDataTable2(0);
             //Form1.dataGridView4.DataSource = changedt_bom(dt);
+            
             dataGridView1.DataSource = dt;
+
+            for (int iRow = 0; iRow < dataGridView1.Rows.Count; iRow++)
+            {
+                string bitem = getstr(dataGridView1.Rows[iRow].Cells["母件料品"].Value);
+                string item = getstr(dataGridView1.Rows[iRow].Cells["物料编码"].Value);
+                if (iRow >= 1)
+                {
+                    string sbitem = getstr(dataGridView1.Rows[iRow - 1].Cells["母件料品"].Value);
+                    string sitem = getstr(dataGridView1.Rows[iRow - 1].Cells["物料编码"].Value);
+                    if (bitem == sbitem && item == sitem)
+                    {
+                        dataGridView1.Rows.Remove(dataGridView1.Rows[iRow]);
+                        iRow = iRow - 1;
+                    }
+                }
+            }
+            //Dictionary<string, string> dic = new Dictionary<string, string>();
+            //for (int iRow = 0; iRow < dataGridView1.Rows.Count; iRow++)
+            //{
+            //    string zkc = getstr(dataGridView1.Rows[iRow].Cells["展开层"].Value);
+            //    if (Convert.ToInt32(zkc) <= 2) continue;
+            //    string bitem = getstr(dataGridView1.Rows[iRow].Cells["母件料品"].Value);
+            //    string item = getstr(dataGridView1.Rows[iRow].Cells["物料编码"].Value);
+            //    if (dic.Count > 0)
+            //    {
+            //        if (ContainsKeyValue(dic, bitem, item))
+            //        {
+            //            dataGridView1.Rows.Remove(dataGridView1.Rows[iRow]);
+            //        }
+            //        else
+            //        {
+            //            dic.Add(bitem, item);
+            //        }
+            //    }
+            //    else
+            //    {
+            //        dic.Add(bitem, item);
+            //    }
+            //}
+            //Dictionary<string, List<BomKey>> dic = new Dictionary<string, List<BomKey>>();
+            //for (int iRow = 0; iRow < dataGridView1.Rows.Count; iRow++)
+            //{
+            //    string zkc = getstr(dataGridView1.Rows[iRow].Cells["展开层"].Value);
+            //    string xuhao = getstr(dataGridView1.Rows[iRow].Cells["序号"].Value);
+            //    if (xuhao == "92")
+            //    {
+            //        continue;
+            //    }
+            //    if (Convert.ToInt32(zkc) <= 2) continue;
+            //    string bitem = getstr(dataGridView1.Rows[iRow].Cells["母件料品"].Value);
+            //    string item = getstr(dataGridView1.Rows[iRow].Cells["物料编码"].Value);
+            //    if (dic.Count > 0)
+            //    {
+            //        if (ContainsKeyValue(dic, bitem, item))
+            //        {
+            //            dataGridView1.Rows.Remove(dataGridView1.Rows[iRow]);
+            //        }
+            //        else
+            //        {
+            //            BomKey newkey = new BomKey();
+            //            newkey.BomMaster = bitem;
+            //            newkey.BomComponent = item;
+            //            List<BomKey> bomKey =  new List<BomKey>();
+            //            dic.TryGetValue(bitem,out bomKey);
+            //            if (bomKey==null)
+            //            {
+            //                List<BomKey> newlistkey = new List<BomKey>();
+            //                newlistkey.Add(newkey);
+            //                dic.Add(bitem, newlistkey);
+            //            }
+            //            else
+            //            {
+            //                dic[bitem].Add(newkey);
+            //            }
+            //            //dic.Add(bitem, item);
+            //        }
+            //    }
+            //    else
+            //    {
+            //        BomKey newkey = new BomKey();
+            //        newkey.BomMaster = bitem;
+            //        newkey.BomComponent = item;
+            //        List<BomKey> newlistkey = new List<BomKey>();
+            //        newlistkey.Add(newkey);
+            //        dic.Add(bitem, newlistkey);
+            //    }
+            //}
             initDataGrid(dataGridView1);
         }
+
         private void toolStripButton2_Click(object sender, EventArgs e)
         {
             string rtnmsg = "";
@@ -637,6 +726,80 @@ namespace WindowsApplication2
             }
         }
         #endregion
+
+
+
+        public static DataTable DataTable2(DataTable dt)
+        {
+            DataView dataView = new DataView(dt);
+            string[] columnNames = new string[] { "母件料品", "物料编码" };
+            DataTable dt2 = dataView.ToTable(true, "母件料品");
+            return dt2;
+        }
+
+        /// <summary>
+        /// datatable去重
+        /// </summary>
+        /// <param name="dtSource">需要去重的datatable</param>
+        /// <returns></returns>
+        public static DataTable GetDistinctTable(DataTable dtSource)
+        {
+            DataTable distinctTable = null;
+            try
+            {
+                if (dtSource != null && dtSource.Rows.Count > 0)
+                {
+                    string[] columnNames = GetTableColumnName(dtSource);
+                    DataView dv = new DataView(dtSource);
+                    distinctTable = dv.ToTable(true, columnNames);
+                }
+            }
+            catch (Exception ee)
+            {
+            }
+            return distinctTable;
+        }
+
+
+
+        public static string[] GetTableColumnName(DataTable dt)
+        {
+            string cols = string.Empty;
+            for (int i = 0; i < dt.Columns.Count; i++)
+            {
+                cols += (dt.Columns[i].ColumnName + ",");
+            }
+            cols = cols.TrimEnd(',');
+            return cols.Split(',');
+        }
+
+
+        /// <summary>
+        /// 判断舰支队是否存在
+        /// </summary>
+        /// <param name="dictionary"></param>
+        /// <param name="expectedKey"></param>
+        /// <param name="expectedValue"></param>
+        /// <returns></returns>
+        //public bool ContainsKeyValue(Dictionary<string, string> dictionary, string expectedKey, string expectedValue)
+        //{
+        //    string actualValue;
+        //    return dictionary.TryGetValue(expectedKey, out actualValue) &&
+        //           actualValue == expectedValue;
+        //}
+
+        public bool ContainsKeyValue(Dictionary<string, List<BomKey>> dictionary, string expectedKey, string expectedValue)
+        {
+            List<BomKey> bomKeys = new List<BomKey>();
+            bool ishave = dictionary.TryGetValue(expectedKey, out bomKeys);
+            if (!ishave) return false;
+            bool result = false;
+            foreach(BomKey item in bomKeys)
+            {
+                if (item.BomComponent == expectedValue) result = true;
+            }
+            return result;
+        }
 
         #region <<dataGridView1事件集合>>
 
