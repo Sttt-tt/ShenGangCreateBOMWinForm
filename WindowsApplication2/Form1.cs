@@ -136,7 +136,7 @@ namespace WindowsApplication2
             ExcelHelper excelHelper = new ExcelHelper(openFileDialog.FileName);
             DataTable dt = excelHelper.ExcelToDataTable2(0);
             //Form1.dataGridView4.DataSource = changedt_bom(dt);
-            
+
             dataGridView1.DataSource = dt;
 
             for (int iRow = 0; iRow < dataGridView1.Rows.Count; iRow++)
@@ -248,14 +248,14 @@ namespace WindowsApplication2
             string CommandType = "Routing";
             List<string> strs = new List<string>();
 
-         
+
 
 
             string strKey = string.Empty;
             ArrayList lst1 = new ArrayList();//工艺路线集合
-     
-          
-            
+
+
+
         }
         private void toolStripButton4_Click(object sender, EventArgs e)
         {
@@ -574,7 +574,7 @@ namespace WindowsApplication2
 
                 DataTable dt = ReadExcelToDataSet.ImportDataTableFromExcel(myStream, 0, 3, false);
                 if (dt == null || dt.Rows.Count == 0) return;
-               
+
             }
         }
         #endregion
@@ -660,6 +660,43 @@ namespace WindowsApplication2
 
 
         /// <summary>
+        ///自接获取BOM结构数据
+        /// </summary>
+        /// <param name="dg"></param>
+        /// <returns></returns>
+        private string GetZJBOMJson(DataGridView dg)
+        {
+            string strJson = string.Empty;
+            List<BomVO> dtos = new List<BomVO>();
+            foreach (DataGridViewRow row in dg.Rows)
+            {
+                string pInvCode = DataHelper.getStr(row.Cells["母件料品"].Value);
+                string pInvDesc = DataHelper.getStr(row.Cells["母件物料描述"].Value);
+                string pInvUnit = DataHelper.getStr(row.Cells["母件基本计量单位"].Value);
+                string pInvQty = DataHelper.getStr(row.Cells["母件用量"].Value);
+                BomVO dto = dtos.Find(t => t.itemcode.Equals(pInvCode));
+                if (dto == null)
+                {
+                    dto = new BomVO();
+                    dto.itemcode = pInvCode;
+                    dto.itemdesc = pInvDesc;
+                    dto.unit = pInvUnit;
+                    dto.qty = pInvQty;
+                    //dto.private2 = DataHelper.getStr(row.Cells["工艺路线"].Value);
+                    dto.rows.Add(new BomLineVO(row));
+                    dtos.Add(dto);
+                }
+                else
+                {
+                    dto.rows.Add(new BomLineVO(row));
+                }
+            }
+            strJson = Newtonsoft.Json.JsonConvert.SerializeObject(dtos);//转json字符串
+            return strJson;
+        }
+
+
+        /// <summary>
         /// 调用U9Bom导入接口
         /// </summary>
         /// <param name="str"></param>
@@ -675,6 +712,26 @@ namespace WindowsApplication2
             string EntCode = getstr(Login.u9ContentHt["OrgCode"]);//上下文组织编码
             string UserCode = getstr(Login.u9ContentHt["UserCode"]);//上下文用户编码
             string body = "{\"context\":{\"CultureName\":\"zh-CN\",\"EntCode\":\"01\",\"OrgCode\":\"" + EntCode + "\",\"UserCode\":\"" + UserCode + "\"},\"args\":\"" + str + "\",\"action\":\"CreateBom\"}";
+            //body.Replace("strorg", getstr(Login.u9ContentHt["OrgCode"]));
+            //body.Replace("struser", getstr(Login.u9ContentHt["UserCode"]));
+            request.AddParameter("application/json", body, ParameterType.RequestBody);
+            IRestResponse response = client.Execute(request);
+            return response.Content;
+        }
+
+
+        public static string ZJPostCreatBom(string str)
+        {
+            string url = commUntil.GetConntionSetting("U9API");
+            //string url = "http://localhost/U9/RestServices/YY.U9.Cust.APISV.IMainSV.svc/DO";
+            var client = new RestClient(url);
+            client.Timeout = -1;
+            var request = new RestRequest(Method.POST);
+            request.AddHeader("Content-Type", "application/json");
+            str = "" + str.Replace("\"", "\\\"") + "";
+            string EntCode = getstr(Login.u9ContentHt["OrgCode"]);//上下文组织编码
+            string UserCode = getstr(Login.u9ContentHt["UserCode"]);//上下文用户编码
+            string body = "{\"context\":{\"CultureName\":\"zh-CN\",\"EntCode\":\"01\",\"OrgCode\":\"" + EntCode + "\",\"UserCode\":\"" + UserCode + "\"},\"args\":\"" + str + "\",\"action\":\"ZJCreateBom\"}";
             //body.Replace("strorg", getstr(Login.u9ContentHt["OrgCode"]));
             //body.Replace("struser", getstr(Login.u9ContentHt["UserCode"]));
             request.AddParameter("application/json", body, ParameterType.RequestBody);
@@ -772,7 +829,7 @@ namespace WindowsApplication2
             bool ishave = dictionary.TryGetValue(expectedKey, out bomKeys);
             if (!ishave) return false;
             bool result = false;
-            foreach(BomKey item in bomKeys)
+            foreach (BomKey item in bomKeys)
             {
                 if (item.BomComponent == expectedValue) result = true;
             }
@@ -1033,7 +1090,7 @@ namespace WindowsApplication2
 
         private void dataGridView1_CellPainting(object sender, DataGridViewCellPaintingEventArgs e)
         {
-            if(this.tabPage1.Text== "物料档案数据")
+            if (this.tabPage1.Text == "物料档案数据")
             {
                 if (e.ColumnIndex > -1)
                 {
@@ -1041,6 +1098,70 @@ namespace WindowsApplication2
                     if (ThisCL.Name.Equals("物料编码") && indexLst.Contains(e.RowIndex))
                         e.CellStyle.ForeColor = Color.Red;
                 }
+            }
+        }
+
+        private void toolStripButton8_Click(object sender, EventArgs e)
+        {
+            //设置tabpage text
+            this.tabPage1.Text = "自接物料清单数据";
+            this.tabPage1.Refresh();
+            //打开文件
+            OpenFileDialog openFileDialog = new OpenFileDialog();
+            openFileDialog.Filter = "Execl文件 (*.xls)|*.xls|所有文件 (*.*)|*.*";
+            openFileDialog.FilterIndex = 0;
+            openFileDialog.RestoreDirectory = true;
+            //openFileDialog.CreatePrompt = true;
+            openFileDialog.Title = "导出文件保存路径";//为Excel
+            openFileDialog.FileName = null;
+            if (openFileDialog.ShowDialog() != DialogResult.OK)
+                return;
+
+            string strFile = openFileDialog.FileName;
+            if (string.IsNullOrEmpty(strFile))
+                return;
+            ExcelHelper excelHelper = new ExcelHelper(openFileDialog.FileName);
+            DataTable excelDt = excelHelper.ZjExcelToDataTable(1);
+            //拼接BOM格式数据
+            DataTable bomexcelDt = excelHelper.ZjExcelToBOMDataTable(excelDt);
+            this.dataGridView1.DataSource = bomexcelDt;
+        }
+
+        private void toolStripButton9_Click(object sender, EventArgs e)
+        {
+            if (this.tabPage1.Text != "自接物料清单数据")
+            {
+                MessageBox.Show("导入数据无效");
+                return;
+            }
+            DataGridView dg = dataGridView1;
+            if (dg == null || dg.Rows.Count <= 0) return;
+
+            //第一步  DataTalbe转BOM结构
+            string strJson = GetZJBOMJson(dg);
+
+            string CommandType = "CreateBOM";
+            List<www.ufida.org.EntityData.UFIDAU9CustCommonAPISVDocDTOData> dictdtos = new List<UFIDAU9CustCommonAPISVDocDTOData>();
+            Dictionary<string, Hashtable> dic = new Dictionary<string, Hashtable>();
+            string key = string.Empty;
+            Hashtable damicht = new Hashtable();
+            List<string> MasterItemMasters = new List<string>(); ///所有需要创建的bom母件集合
+            string rtnmsg = "";
+            rtnmsg = ZJPostCreatBom(strJson);
+
+            if (rtnmsg != "{\"d\":\"\"}")
+            {
+                if (rtnmsg.Contains("项目已存在"))
+                {
+                    return;
+                }
+                {
+                    msg("创建失败：" + rtnmsg);
+                }
+            }
+            else
+            {
+                msg("创建bom成功");
             }
         }
     }

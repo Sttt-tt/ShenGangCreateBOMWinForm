@@ -370,6 +370,244 @@ namespace WindowsApplication2
             return dt;
         }
 
+        /// <summary>
+        ///自接数据Datagrid数据
+        /// </summary>
+        /// <param name="index"></param>
+        /// <returns></returns>
+        public DataTable ZjExcelToDataTable(int index)
+        {
+            //实例化DataTable来存放数据
+            DataTable dt = new DataTable();
+
+            //增加自定义列
+            dt.Columns.Add("序号");
+            dt.Columns.Add("物料编码");
+            dt.Columns.Add("物料描述");
+            dt.Columns.Add("单位");
+            dt.Columns.Add("用量");
+            dt.Columns.Add("备注");
+            //dt.Columns.Add("材料");
+            //dt.Columns.Add("单重");
+            //dt.Columns.Add("备  注");
+            dt.Columns.Add("料品形态属性");
+
+            IWorkbook workbook;//创建一个工作薄接口
+            string fileExt = Path.GetExtension(fileName).ToLower();//获取文件的拓展名
+            //创建一个文件流
+            using (FileStream fs = new FileStream(fileName, FileMode.Open, FileAccess.Read))
+            {
+                if (fileExt == ".xlsx")
+                {
+                    workbook = new XSSFWorkbook(fs);
+                }
+                else
+                {
+                    workbook = new HSSFWorkbook(fs);
+                }
+
+                int SheetCount = workbook.NumberOfSheets;//获取表的数量
+
+
+                //遍历每个Sheet,从sheet开始
+                for (int p = 1; p <= SheetCount - 1; p++)
+                {
+                    //实例化sheet
+                    ISheet sheet = workbook.GetSheetAt(p);
+                    //获取表头
+                    //IRow header = sheet.GetRow(sheet.FirstRowNum + 2);
+                    int startRow = 4;//数据的第一行索引
+
+                    //读取数据
+                    for (int i = startRow; i <= sheet.LastRowNum; i++)
+                    {
+                        IRow row = sheet.GetRow(i);
+
+                        if (row == null)
+                        {
+                            continue;
+                        }
+                        if (string.IsNullOrEmpty(Convert.ToString(row.Cells[7])))
+                        {
+                            continue;
+                        }
+                        if (row.Cells[6].ToString().Contains("说明"))
+                        {
+                            break;
+                        }
+                        //if (!row.Cells[7].ToString().Contains("-"))
+                        //{
+                        //    continue;
+                        //}
+
+                        DataRow dr = dt.NewRow();
+                        for (int j = row.FirstCellNum + 6; j < row.LastCellNum - 21; j++)
+                        {
+                            //0 row.GetCell(7)   序号
+                            //1 row.GetCell(8)   代 号
+                            //2 row.GetCell(10)   名 称 及 规 格
+                            //3 row.GetCell(12)  数量
+                            //4 row.GetCell(13)  材料
+                            //5 row.GetCell(14) 单重
+                            //6 row.GetCell(16)  备 注
+                            if (j == 6)
+                            {
+                                if (string.IsNullOrEmpty(Convert.ToString(row.GetCell(j))))
+                                {
+                                    dr["料品形态属性"] = "制造件";
+                                }
+                                else
+                                {
+                                    dr["料品形态属性"] = "采购件";
+                                }
+                            }
+                            if (j == 7)
+                            {
+                                dr["序号"] = row.GetCell(j).ToString();
+                            }
+                            if (j == 8)
+                            {
+                                dr["物料编码"] = row.GetCell(j).ToString() + "(" + row.GetCell(j - 1).ToString() + ")";
+                            }
+                            if (j == 10)
+                            {
+                                dr["物料描述"] = row.GetCell(j).ToString();
+                            }
+                            if (j == 12)
+                            {
+                                dr["用量"] = row.GetCell(j).ToString();
+                            }
+                            dr["单位"] = "KG";
+                            //if (j == 13)
+                            //{
+                            //    dr[4] = row.GetCell(j).ToString();
+                            //}
+                            //if (j == 14)
+                            //{
+                            //    dr[5] = row.GetCell(j).ToString();
+                            //}
+                            if (j == 16)
+                            {
+                                dr["备注"] = row.GetCell(j).ToString();
+                            }
+
+                        }
+                        dt.Rows.Add(dr);
+                    }
+                }
+
+            }
+            return dt;
+        }
+
+
+        // <summary>
+        ///自接数据BOMDatagrid数据
+        /// </summary>
+        /// <param name="index"></param>
+        /// <returns></returns>
+        public DataTable ZjExcelToBOMDataTable(DataTable dataTable)
+        {
+            dataTable.PrimaryKey = new System.Data.DataColumn[] { dataTable.Columns["序号"] };
+            //实例化DataTable来存放数据
+            DataTable dt = new DataTable();
+
+            //增加自定义列
+            dt.Columns.Add("序号");
+            dt.Columns.Add("母件料品");
+            dt.Columns.Add("母件物料描述");
+            dt.Columns.Add("母件基本计量单位");
+            dt.Columns.Add("母件用量");
+            dt.Columns.Add("物料编码");
+            dt.Columns.Add("物料描述");
+            dt.Columns.Add("基本计量单位");
+            dt.Columns.Add("数量/重量");
+            //dt.Columns.Add("材料");
+            //dt.Columns.Add("单重");
+            //dt.Columns.Add("备  注");
+            dt.Columns.Add("料品形态属性");
+            dt.Columns.Add("备注");
+            int i = 0;
+            try
+            {
+                foreach (DataRow row in dataTable.Rows)
+                {
+                    i++;
+                    if (!Convert.ToString(row["序号"]).Contains("-"))
+                    {
+                        continue;
+                    }
+                    else
+                    {
+                        DataRow dr = dt.NewRow();
+                        if (!Convert.ToString(row["序号"]).Contains("/"))
+                        {
+                            string[] str = Convert.ToString(row["序号"]).Split('-');
+                            if (str.Count() == 2)
+                            {
+                                DataRow row1 = dataTable.Rows.Find(str[0]);
+                                dr["序号"] = row["序号"];
+                                dr["母件料品"] = row1["物料编码"];
+                                dr["母件物料描述"] = row1["物料描述"];
+                                dr["母件基本计量单位"] = "KG";
+                                dr["母件用量"] = row1["用量"];
+                                dr["物料编码"] = row["物料编码"];
+                                dr["物料描述"] = row["物料描述"];
+                                dr["基本计量单位"] = "KG";
+                                dr["数量/重量"] = row["用量"];
+                                dr["料品形态属性"] = row["料品形态属性"];
+                                dr["备注"] = row["备注"];
+                            }
+                        }
+                        else
+                        {
+                            string[] str1 = Convert.ToString(row["序号"]).Split('-');
+                            if (str1.Count() == 2)
+                            {
+                                string[] str2 = Convert.ToString(row["序号"]).Split('/');
+                                DataRow row2 = dataTable.Rows.Find(str2[0]);
+                                dr["序号"] = row["序号"];
+                                dr["母件料品"] = row2["物料编码"];
+                                dr["母件物料描述"] = row2["物料描述"];
+                                dr["母件基本计量单位"] = "KG";
+                                dr["母件用量"] = row2["用量"];
+                                dr["物料编码"] = row["物料编码"];
+                                dr["物料描述"] = row["物料描述"];
+                                dr["基本计量单位"] = "KG";
+                                dr["数量/重量"] = row["用量"];
+                                dr["料品形态属性"] = row["料品形态属性"];
+                                dr["备注"] = row["备注"];
+                            }
+                            else
+                            {
+                                int index = Convert.ToString(row["序号"]).IndexOf("/") + 2;
+                                string str3 = Convert.ToString(row["序号"]).Substring(0, index);
+                                DataRow row3 = dataTable.Rows.Find(str3);
+                                dr["序号"] = row["序号"];
+                                dr["母件料品"] = row3["物料编码"];
+                                dr["母件物料描述"] = row3["物料描述"];
+                                dr["母件基本计量单位"] = "KG";
+                                dr["母件用量"] = row3["用量"];
+                                dr["物料编码"] = row["物料编码"];
+                                dr["物料描述"] = row["物料描述"];
+                                dr["基本计量单位"] = "KG";
+                                dr["数量/重量"] = row["用量"];
+                                dr["料品形态属性"] = row["料品形态属性"];
+                                dr["备注"] = row["备注"];
+                            }
+                        }
+                        dt.Rows.Add(dr);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+
+                string msg = ex.Message;
+            }
+
+            return dt;
+        }
 
         /// <summary>
         /// 删除展开层是1的行
@@ -421,6 +659,5 @@ namespace WindowsApplication2
             DataTable dataTable = cells.ExportDataTableAsString(0, 0, cells.MaxDataRow + 1, 9, true);//noneTitle
             return dataTable;
         }
-
-}
+    }
 }
