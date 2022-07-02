@@ -76,10 +76,10 @@ namespace WindowsApplication2
 
             DataGridViewRow row = dataGridView1.CurrentRow;
             if (row.Cells[0].Value == null) return;
-            int index = Form1.dataGridView1.CurrentRow.Index - 1;//由于按回车行索引会自动跳下下一行，所以取当前索引的上一行
-            DataGridViewRow row2 = Form1.dataGridView1.Rows[index];
-            Form1.dataGridView1.Rows[index].Cells[8].Selected = true;
-            Form1.dataGridView1.Rows[index + 1].Cells[8].Selected = false;
+            int index = this.dataGridView1.CurrentRow.Index - 1;//由于按回车行索引会自动跳下下一行，所以取当前索引的上一行
+            DataGridViewRow row2 = this.dataGridView1.Rows[index];
+            this.dataGridView1.Rows[index].Cells[8].Selected = true;
+            this.dataGridView1.Rows[index + 1].Cells[8].Selected = false;
             row2.Cells["物料编码"].Value = row.Cells[0].Value;//0是编码，1是描述
             row2.Cells["物料描述"].Value = row.Cells[1].Value;//0是编码，1是描述
             this.Close();

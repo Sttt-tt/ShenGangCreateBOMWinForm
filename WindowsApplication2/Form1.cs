@@ -14,6 +14,7 @@ using System.Text.RegularExpressions;
 using RestSharp;
 using WindowsApplication2.VO;
 using WindowsApplication2.Helper;
+using Newtonsoft.Json;
 
 namespace WindowsApplication2
 {
@@ -23,11 +24,16 @@ namespace WindowsApplication2
         {
             InitializeComponent();
             //this.tabControl1.Visible = false;
-            this.tabControl1.TabPages.Remove(this.tabPage2);
+            //this.tabControl1.TabPages.Remove(this.tabPage2);
             this.comboBox1.Visible = false;
             //this.tabControl1.TabPages.AddRange(this.tabPage1);
         }
-
+        private void ShowProgressForm()
+        {
+            string val = "";
+            ProgressFrom p = new ProgressFrom(val);
+            p.ShowDialog();
+        }
         private DataTable changedt_bom(DataTable dt)
         {
             for (int i = dt.Rows.Count - 1; i >= 0; i--)
@@ -97,6 +103,14 @@ namespace WindowsApplication2
         /// <param name="e"></param>
         private void toolStripButton1_Click(object sender, EventArgs e)
         {
+            //设置tabpage text
+            if (this.tabPage1.Text != "物料清单数据")
+            {
+                this.tabPage1.Text = "物料清单数据";
+                this.tabPage1.Refresh();
+            }
+            //打开文件
+
             OpenFileDialog openFileDialog = new OpenFileDialog();
             openFileDialog.Filter = "Execl文件 (*.xls)|*.xls|所有文件 (*.*)|*.*";
             openFileDialog.FilterIndex = 0;
@@ -104,7 +118,8 @@ namespace WindowsApplication2
             //openFileDialog.CreatePrompt = true;
             openFileDialog.Title = "导出文件保存路径";//为Excel
             openFileDialog.FileName = null;
-            openFileDialog.ShowDialog();
+            if (openFileDialog.ShowDialog() != DialogResult.OK)
+                return;
 
 
             Stream myStream;
@@ -233,59 +248,22 @@ namespace WindowsApplication2
             string CommandType = "Routing";
             List<string> strs = new List<string>();
 
-            #region 校验母件+工序行号是否重复
+         
 
 
             string strKey = string.Empty;
             ArrayList lst1 = new ArrayList();//工艺路线集合
-            ArrayList lst2 = new ArrayList();//Excel中工艺路线重复项
-            for (int iRow = 0; iRow < this.dataGridView2.Rows.Count; iRow++)
-            {
-                strKey = this.dataGridView2.Rows[iRow].Cells[0].Value.ToString() + " / " + this.dataGridView2.Rows[iRow].Cells[5].Value.ToString();
-                if (lst1.Contains(strKey))
-                    lst2.Add(strKey);
-                else
-                    lst1.Add(strKey);
-
-            }
-            if (lst2.Count > 0)
-            {
-                StringBuilder sb = new StringBuilder();
-                for (int i = 0; i < lst2.Count; i++)
-                {
-                    sb.Append("\n").Append((lst2[i].ToString()));
-                }
-                msg("Excel中存在重复的工艺母件和工序行号: " + sb.ToString());
-                return;
-            }
-
-            #endregion
-
-            foreach (DataGridViewRow dgvr in dataGridView2.Rows)
-            {
-
-                string str = "";
-                foreach (DataGridViewColumn col in dataGridView2.Columns)
-                {
-                    str += getstr(dgvr.Cells[col.Name].Value) + "|";
-                }
-                str = str.Substring(0, str.Length - 1);
-                strs.Add(str);
-            }
-            string rtnmsg = "";
-            List<www.ufida.org.EntityData.UFIDAU9CustCommonAPISVDocDTOData> rtnlst = UFIDA.U9.Cust.U9CommonAPISv.CommonAPI.DOU9Commonsv(Login.u9ContentHt, CommandType, strs, "", 0, null, null, out rtnmsg);
-
-            if (rtnmsg == "OK")
-            {
-                msg(rtnlst[0].m_rtnStr);
-            }
-            else
-            {
-                msg(rtnmsg);
-            }
+     
+          
+            
         }
         private void toolStripButton4_Click(object sender, EventArgs e)
         {
+            if (this.tabPage1.Text != "物料清单数据")
+            {
+                MessageBox.Show("导入数据无效");
+                return;
+            }
             DataGridView dg = dataGridView1;
             if (dg == null || dg.Rows.Count <= 0) return;
 
@@ -596,7 +574,7 @@ namespace WindowsApplication2
 
                 DataTable dt = ReadExcelToDataSet.ImportDataTableFromExcel(myStream, 0, 3, false);
                 if (dt == null || dt.Rows.Count == 0) return;
-                this.dataGridView2.DataSource = changedt_routing(dt);
+               
             }
         }
         #endregion
@@ -968,5 +946,102 @@ namespace WindowsApplication2
 
         #endregion
 
+        private void toolStripButton7_Click(object sender, EventArgs e)
+        {
+            //设置tabpage text
+            this.tabPage1.Text = "物料档案数据";
+            this.tabPage1.Refresh();
+            //打开文件
+            OpenFileDialog openFileDialog = new OpenFileDialog();
+            openFileDialog.Filter = "Execl文件 (*.xls)|*.xls|所有文件 (*.*)|*.*";
+            openFileDialog.FilterIndex = 0;
+            openFileDialog.RestoreDirectory = true;
+            //openFileDialog.CreatePrompt = true;
+            openFileDialog.Title = "导出文件保存路径";//为Excel
+            openFileDialog.FileName = null;
+            if (openFileDialog.ShowDialog() != DialogResult.OK)
+                return;
+
+            string strFile = openFileDialog.FileName;
+            if (string.IsNullOrEmpty(strFile))
+                return;
+
+            DataTable excelDt = ExcelHelper.GetData(strFile);
+            this.dataGridView1.DataSource = excelDt;
+
+        }
+
+        private void toolStripButton6_Click_1(object sender, EventArgs e)
+        {
+            if (this.tabPage1.Text != "物料档案数据")
+            {
+                MessageBox.Show("导入数据无效");
+                return;
+            }
+            Thread TD = new Thread(ShowProgressForm);
+            TD.Start();
+            try
+            {
+                DataTable itemDt = this.dataGridView1.DataSource as DataTable;
+                if (itemDt == null || itemDt.Rows.Count <= 0)
+                    return;
+                string strJson = JsonConvert.SerializeObject(itemDt);
+                string strResult = HttpClientHelper.DoPost(strJson, "SG_BatchCreatItemMaster");
+                DataTable dt = JsonConvert.DeserializeObject<DataTable>(strResult);
+                int k = 0;//索引号
+                Int32 records = 0;//成功导入记录数
+                indexLst = new List<int>();
+                if (!itemDt.Columns.Contains("错误记录"))
+                    itemDt.Columns.Add("错误记录");
+                foreach (DataRow row in itemDt.Rows)
+                {
+                    DataRow[] newRow = dt.Select($"ID={k}");
+                    if (newRow.Length > 0)
+                    {
+                        if (Convert.ToBoolean(newRow[0]["IsSuccess"]))
+                        {
+                            //物料存在时，收集
+                            if (newRow[0]["Error"].Equals("料号已存在"))
+                            {
+                                indexLst.Add(k);
+                            }
+                            else
+                                records++;
+                            row["物料编码"] = newRow[0]["code"].ToString();
+                        }
+                        row["错误记录"] = newRow[0]["Error"];
+                    }
+
+                    k++;
+                }
+
+                this.dataGridView1.DataSource = itemDt;
+
+
+                TD.Abort();
+
+                MessageBox.Show($"总计导入{itemDt.Rows.Count},成功{records}个");
+            }
+            catch (Exception ex)
+            {
+                TD.Abort();
+            }
+            //处理返回值
+            //MessageBox.Show(strResult);
+        }
+        private List<Int32> indexLst = new List<int>();//物料在系统中已存在的行
+
+        private void dataGridView1_CellPainting(object sender, DataGridViewCellPaintingEventArgs e)
+        {
+            if(this.tabPage1.Text== "物料档案数据")
+            {
+                if (e.ColumnIndex > -1)
+                {
+                    DataGridViewColumn ThisCL = dataGridView1.Columns[e.ColumnIndex];
+                    if (ThisCL.Name.Equals("物料编码") && indexLst.Contains(e.RowIndex))
+                        e.CellStyle.ForeColor = Color.Red;
+                }
+            }
+        }
     }
 }

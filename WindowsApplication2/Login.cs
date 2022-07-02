@@ -14,12 +14,6 @@ using System.Collections;
 using Microsoft.Data.ConnectionUI;
 using UFIDA.U9.Base.UserRole;
 /************************************************************
-软件作者: 宋本田
-
-QQ:68469486
-Mail:   songbt@ufida.com.cn
-
-备注: 
 
 ************************************************************/
 namespace WindowsApplication2

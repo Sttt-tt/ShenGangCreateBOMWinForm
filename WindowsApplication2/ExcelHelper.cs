@@ -1,4 +1,5 @@
-﻿using NPOI.HSSF.UserModel;
+﻿using Aspose.Cells;
+using NPOI.HSSF.UserModel;
 using NPOI.SS.UserModel;
 using NPOI.XSSF.UserModel;
 using System;
@@ -411,5 +412,15 @@ namespace WindowsApplication2
             }
         }
 
-    }
+        ///aspose.dll 读取
+        public static DataTable GetData(string fileName)
+        {
+            Workbook workbook = new Workbook(fileName);
+            Worksheet sheet = workbook.Worksheets[0]; //工作表 
+            Cells cells = sheet.Cells;//单元格 
+            DataTable dataTable = cells.ExportDataTableAsString(0, 0, cells.MaxDataRow + 1, 9, true);//noneTitle
+            return dataTable;
+        }
+
+}
 }
