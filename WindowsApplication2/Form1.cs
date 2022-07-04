@@ -667,28 +667,28 @@ namespace WindowsApplication2
         private string GetZJBOMJson(DataGridView dg)
         {
             string strJson = string.Empty;
-            List<BomVO> dtos = new List<BomVO>();
+            List<BomVOZJ> dtos = new List<BomVOZJ>();
             foreach (DataGridViewRow row in dg.Rows)
             {
                 string pInvCode = DataHelper.getStr(row.Cells["母件料品"].Value);
                 string pInvDesc = DataHelper.getStr(row.Cells["母件物料描述"].Value);
                 string pInvUnit = DataHelper.getStr(row.Cells["母件基本计量单位"].Value);
                 string pInvQty = DataHelper.getStr(row.Cells["母件用量"].Value);
-                BomVO dto = dtos.Find(t => t.itemcode.Equals(pInvCode));
+                BomVOZJ dto = dtos.Find(t => t.itemcode.Equals(pInvCode));
                 if (dto == null)
                 {
-                    dto = new BomVO();
+                    dto = new BomVOZJ();
                     dto.itemcode = pInvCode;
                     dto.itemdesc = pInvDesc;
                     dto.unit = pInvUnit;
                     dto.qty = pInvQty;
                     //dto.private2 = DataHelper.getStr(row.Cells["工艺路线"].Value);
-                    dto.rows.Add(new BomLineVO(row));
+                    dto.rows.Add(new BomLineVOZJ(row));
                     dtos.Add(dto);
                 }
                 else
                 {
-                    dto.rows.Add(new BomLineVO(row));
+                    dto.rows.Add(new BomLineVOZJ(row));
                 }
             }
             strJson = Newtonsoft.Json.JsonConvert.SerializeObject(dtos);//转json字符串
