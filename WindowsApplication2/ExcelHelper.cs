@@ -386,6 +386,7 @@ namespace WindowsApplication2
             dt.Columns.Add("物料描述");
             dt.Columns.Add("单位");
             dt.Columns.Add("用量");
+            dt.Columns.Add("单重");
             dt.Columns.Add("备注");
             //dt.Columns.Add("材料");
             //dt.Columns.Add("单重");
@@ -450,17 +451,19 @@ namespace WindowsApplication2
                             //4 row.GetCell(13)  材料
                             //5 row.GetCell(14) 单重
                             //6 row.GetCell(16)  备 注
-                            if (j == 6)
-                            {
-                                if (string.IsNullOrEmpty(Convert.ToString(row.GetCell(j))))
-                                {
-                                    dr["料品形态属性"] = "制造件";
-                                }
-                                else
-                                {
-                                    dr["料品形态属性"] = "采购件";
-                                }
-                            }
+
+                            //if (j == 6)
+                            //{
+                            //    if (string.IsNullOrEmpty(Convert.ToString(row.GetCell(j))))
+                            //    {
+                            //        dr["料品形态属性"] = "制造件";
+                            //    }
+                            //    else
+                            //    {
+                            //        dr["料品形态属性"] = "采购件";
+                            //    }
+                            //}
+                            dr["料品形态属性"] = "制造件";
                             if (j == 7)
                             {
                                 dr["序号"] = row.GetCell(j).ToString();
@@ -482,10 +485,10 @@ namespace WindowsApplication2
                             //{
                             //    dr[4] = row.GetCell(j).ToString();
                             //}
-                            //if (j == 14)
-                            //{
-                            //    dr[5] = row.GetCell(j).ToString();
-                            //}
+                            if (j == 14)
+                            {
+                                dr["单重"] = row.GetCell(j).ToString();
+                            }
                             if (j == 16)
                             {
                                 dr["备注"] = row.GetCell(j).ToString();
@@ -509,6 +512,26 @@ namespace WindowsApplication2
         public DataTable ZjExcelToBOMDataTable(DataTable dataTable)
         {
             dataTable.PrimaryKey = new System.Data.DataColumn[] { dataTable.Columns["序号"] };
+            //拼接最上层BOM
+            string itemCode = string.Empty;//物料编码
+            string itemName = string.Empty;//物料名称
+            int qty = 0;
+            List<string> XhList = new List<string>();//序号集合
+            foreach (DataRow item in dataTable.Rows)
+            {
+                //拼接最上层母BOM数据
+                if (Convert.ToString(item["序号"]) == "1")
+                {
+                    string[] items = Convert.ToString(item["物料编码"]).Split('-');
+                    itemCode = items[0];
+                    itemName = items[0];
+                }
+                if (!Convert.ToString(item["序号"]).Contains("-"))
+                {
+                    qty += Convert.ToInt32(item["用量"]);
+                }
+                XhList.Add(Convert.ToString(item["序号"]));
+            }
             //实例化DataTable来存放数据
             DataTable dt = new DataTable();
 
@@ -523,7 +546,7 @@ namespace WindowsApplication2
             dt.Columns.Add("基本计量单位");
             dt.Columns.Add("数量/重量");
             //dt.Columns.Add("材料");
-            //dt.Columns.Add("单重");
+            dt.Columns.Add("单重");
             //dt.Columns.Add("备  注");
             dt.Columns.Add("料品形态属性");
             dt.Columns.Add("备注");
@@ -532,14 +555,47 @@ namespace WindowsApplication2
             {
                 foreach (DataRow row in dataTable.Rows)
                 {
+                    DataRow dr = dt.NewRow();
                     i++;
                     if (!Convert.ToString(row["序号"]).Contains("-"))
                     {
-                        continue;
+                        dr["序号"] = row["序号"];
+                        dr["母件料品"] = itemCode;
+                        dr["母件物料描述"] = itemName;
+                        dr["母件基本计量单位"] = "KG";
+                        dr["母件用量"] = qty;
+                        dr["物料编码"] = row["物料编码"];
+                        dr["物料描述"] = row["物料描述"];
+                        dr["基本计量单位"] = "KG";
+                        dr["数量/重量"] = row["用量"];
+                        dr["单重"] = row["单重"];
+                        dr["料品形态属性"] = row["料品形态属性"];
+                        dr["备注"] = row["备注"];
+                        dt.Rows.Add(dr);
+
+
+                        if (GetLevel1Count(Convert.ToString(row["序号"]), XhList))
+                        {
+                            DataRow drr = dt.NewRow();
+                            drr["序号"] = row["序号"] + "-" + "1";
+                            drr["母件料品"] = row["物料编码"];
+                            drr["母件物料描述"] = row["物料描述"];
+                            drr["母件基本计量单位"] = "KG";
+                            drr["母件用量"] = row["用量"];
+                            //dr["物料编码"] = wl[0] + "-" + wl[1] + "-" + wl[2] + "-" + "1" + "-" + "0" + "(" + row["序号"] + "/" + "1" + ")";
+                            //dr["物料描述"] = wl[0] + "-" + wl[1] + "-" + wl[2] + "-" + "1" + "-" + "0" + "(" + row["序号"] + "/" + "1" + ")";
+                            drr["物料编码"] = Convert.ToString(row["物料编码"]) + "末级自动创建";
+                            drr["物料描述"] = Convert.ToString(row["物料编码"]) + "末级自动创建";
+                            drr["基本计量单位"] = "KG";
+                            drr["数量/重量"] = "0";
+                            dr["单重"] = row["单重"];
+                            drr["料品形态属性"] = row["料品形态属性"];
+                            drr["备注"] = row["备注"];
+                            dt.Rows.Add(drr);
+                        }
                     }
                     else
                     {
-                        DataRow dr = dt.NewRow();
                         if (!Convert.ToString(row["序号"]).Contains("/"))
                         {
                             string[] str = Convert.ToString(row["序号"]).Split('-');
@@ -555,8 +611,30 @@ namespace WindowsApplication2
                                 dr["物料描述"] = row["物料描述"];
                                 dr["基本计量单位"] = "KG";
                                 dr["数量/重量"] = row["用量"];
+                                dr["单重"] = row["单重"];
                                 dr["料品形态属性"] = row["料品形态属性"];
                                 dr["备注"] = row["备注"];
+                                dt.Rows.Add(dr);
+                            }
+                            if (GetLevelCount(Convert.ToString(row["序号"]), XhList))
+                            {
+                                DataRow drr = dt.NewRow();
+                                drr["序号"] = row["序号"] + "/" + "1";
+                                string[] wl = Convert.ToString(row["物料编码"]).Split('-');
+                                drr["母件料品"] = row["物料编码"];
+                                drr["母件物料描述"] = row["物料描述"];
+                                drr["母件基本计量单位"] = "KG";
+                                drr["母件用量"] = row["用量"];
+                                //dr["物料编码"] = wl[0] + "-" + wl[1] + "-" + wl[2] + "-" + "1" + "-" + "0" + "(" + row["序号"] + "/" + "1" + ")";
+                                //dr["物料描述"] = wl[0] + "-" + wl[1] + "-" + wl[2] + "-" + "1" + "-" + "0" + "(" + row["序号"] + "/" + "1" + ")";
+                                drr["物料编码"] = Convert.ToString(row["物料编码"]) + "末级自动创建";
+                                drr["物料描述"] = Convert.ToString(row["物料编码"]) + "末级自动创建";
+                                drr["基本计量单位"] = "KG";
+                                drr["数量/重量"] = "0";
+                                dr["单重"] = row["单重"];
+                                drr["料品形态属性"] = row["料品形态属性"];
+                                drr["备注"] = row["备注"];
+                                dt.Rows.Add(drr);
                             }
                         }
                         else
@@ -575,8 +653,10 @@ namespace WindowsApplication2
                                 dr["物料描述"] = row["物料描述"];
                                 dr["基本计量单位"] = "KG";
                                 dr["数量/重量"] = row["用量"];
+                                dr["单重"] = row["单重"];
                                 dr["料品形态属性"] = row["料品形态属性"];
                                 dr["备注"] = row["备注"];
+                                dt.Rows.Add(dr);
                             }
                             else
                             {
@@ -592,11 +672,13 @@ namespace WindowsApplication2
                                 dr["物料描述"] = row["物料描述"];
                                 dr["基本计量单位"] = "KG";
                                 dr["数量/重量"] = row["用量"];
+                                dr["单重"] = row["单重"];
                                 dr["料品形态属性"] = row["料品形态属性"];
                                 dr["备注"] = row["备注"];
+                                dt.Rows.Add(dr);
                             }
                         }
-                        dt.Rows.Add(dr);
+                        //dt.Rows.Add(dr);
                     }
                 }
             }
@@ -607,6 +689,60 @@ namespace WindowsApplication2
             }
 
             return dt;
+        }
+
+
+        /// <summary>
+        /// 判断当前料号是否是最下级,是返回true,否返回false
+        /// </summary>
+        /// <param name="list"></param>
+        /// <returns></returns>
+        public bool GetLevelCount(string XH, List<string> list)
+        {
+            int i = 0;
+            foreach (var item in list)
+            {
+                string[] str = item.Split('/');
+                if (str[0].Contains(XH))
+                {
+                    i++;
+                }
+            }
+            if (i == 1)
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// 判断第一层料号是否是最下级,是返回true,否返回false
+        /// </summary>
+        /// <param name="XH"></param>
+        /// <param name="list"></param>
+        /// <returns></returns>
+        public bool GetLevel1Count(string XH, List<string> list)
+        {
+            int i = 0;
+            foreach (var item in list)
+            {
+                string[] str = item.Split('/');
+                if (str[0].Contains(XH + "-" + "1"))
+                {
+                    i++;
+                }
+            }
+            if (i == 0)
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
         }
 
         /// <summary>
