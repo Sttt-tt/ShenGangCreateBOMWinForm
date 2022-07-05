@@ -95,6 +95,8 @@ namespace WindowsApplication2
         private FlexCell.Grid grid1 = new FlexCell.Grid();
 
 
+
+
         #region <<按钮事件集合>>
         /// <summary>
         /// 上锅物料清单导入按钮事件
@@ -674,6 +676,7 @@ namespace WindowsApplication2
                 string pInvDesc = DataHelper.getStr(row.Cells["母件物料描述"].Value);
                 string pInvUnit = DataHelper.getStr(row.Cells["母件基本计量单位"].Value);
                 string pInvQty = DataHelper.getStr(row.Cells["母件用量"].Value);
+                string material = DataHelper.getStr(row.Cells["母件材料"].Value);
                 BomVOZJ dto = dtos.Find(t => t.itemcode.Equals(pInvCode));
                 if (dto == null)
                 {
@@ -681,6 +684,7 @@ namespace WindowsApplication2
                     dto.itemcode = pInvCode;
                     dto.itemdesc = pInvDesc;
                     dto.unit = pInvUnit;
+                    dto.material = material;
                     dto.qty = pInvQty;
                     //dto.private2 = DataHelper.getStr(row.Cells["工艺路线"].Value);
                     dto.rows.Add(new BomLineVOZJ(row));
@@ -845,27 +849,51 @@ namespace WindowsApplication2
         /// <param name="e"></param>
         private void dataGridView1_CellEndEdit(object sender, DataGridViewCellEventArgs e)
         {
-            int index = e.ColumnIndex;
-            string value = dataGridView1[e.ColumnIndex, e.RowIndex].Value?.ToString();
-
-            string mjItemCode = dataGridView1[3, e.RowIndex].Value?.ToString();
-
-            //如果是物料描述列修改  则进入新的form2
-            if (e.ColumnIndex == 8)
+            //自接修改物料清单
+            if (tabPage1.Text == "自接物料清单数据")
             {
-                Form2 form2 = new Form2(value);
-                form2.Show();
-            }
-            else if (e.ColumnIndex == 15)
-            {
-                for (int iRow = 0; iRow < dataGridView1.Rows.Count; iRow++)
+
+                //是否是末级物料
+                string sfmj = dataGridView1[12, e.RowIndex].Value?.ToString();
+                if (sfmj != "是") return;
+
+                int index = e.ColumnIndex;
+                string value = dataGridView1[e.ColumnIndex, e.RowIndex].Value?.ToString();
+                //料品材质
+                string itemCz = dataGridView1[9, e.RowIndex].Value?.ToString();
+                //如果是物料描述列修改  则进入新的form2
+                if (e.ColumnIndex == 7)
                 {
-                    if (mjItemCode == getstr(dataGridView1.Rows[iRow].Cells["母件料品"].Value))
+                    Form3 form = new Form3(value, itemCz);
+                    form.Show();
+                }
+            }
+            else
+            {
+                int index = e.ColumnIndex;
+                string value = dataGridView1[e.ColumnIndex, e.RowIndex].Value?.ToString();
+
+                string mjItemCode = dataGridView1[3, e.RowIndex].Value?.ToString();
+
+                //如果是物料描述列修改  则进入新的form2
+                if (e.ColumnIndex == 8)
+                {
+                    Form2 form2 = new Form2(value);
+                    form2.Show();
+                }
+                else if (e.ColumnIndex == 15)
+                {
+                    for (int iRow = 0; iRow < dataGridView1.Rows.Count; iRow++)
                     {
-                        dataGridView1.Rows[iRow].Cells["工艺路线"].Value = value;
+                        if (mjItemCode == getstr(dataGridView1.Rows[iRow].Cells["母件料品"].Value))
+                        {
+                            dataGridView1.Rows[iRow].Cells["工艺路线"].Value = value;
+                        }
                     }
                 }
             }
+
+
         }
 
         /// <summary>
@@ -1125,6 +1153,13 @@ namespace WindowsApplication2
             //拼接BOM格式数据
             DataTable bomexcelDt = excelHelper.ZjExcelToBOMDataTable(excelDt);
             this.dataGridView1.DataSource = bomexcelDt;
+            //this.dataGridView1.Columns["母件料品"].Visible = false;
+            //this.dataGridView1.Columns["母件物料描述"].Visible = false;
+            //this.dataGridView1.Columns["母件材料"].Visible = false;
+            //this.dataGridView1.Columns["母件基本计量单位"].Visible = false;
+            //this.dataGridView1.Columns["母件用量"].Visible = false;
+            this.dataGridView1.Columns["是否虚拟"].Visible = false;
+            this.dataGridView1.Columns["是否末阶"].Visible = false;
         }
 
         private void toolStripButton9_Click(object sender, EventArgs e)
@@ -1134,34 +1169,100 @@ namespace WindowsApplication2
                 MessageBox.Show("导入数据无效");
                 return;
             }
-            DataGridView dg = dataGridView1;
-            if (dg == null || dg.Rows.Count <= 0) return;
+            Thread TD = new Thread(ShowProgressForm);
+            TD.Start();
 
-            //第一步  DataTalbe转BOM结构
-            string strJson = GetZJBOMJson(dg);
-
-            string CommandType = "CreateBOM";
-            List<www.ufida.org.EntityData.UFIDAU9CustCommonAPISVDocDTOData> dictdtos = new List<UFIDAU9CustCommonAPISVDocDTOData>();
-            Dictionary<string, Hashtable> dic = new Dictionary<string, Hashtable>();
-            string key = string.Empty;
-            Hashtable damicht = new Hashtable();
-            List<string> MasterItemMasters = new List<string>(); ///所有需要创建的bom母件集合
-            string rtnmsg = "";
-            rtnmsg = ZJPostCreatBom(strJson);
-
-            if (rtnmsg != "{\"d\":\"\"}")
+            try
             {
-                if (rtnmsg.Contains("项目已存在"))
+                DataGridView dg = dataGridView1;
+                if (dg == null || dg.Rows.Count <= 0) return;
+
+                //第一步  DataTalbe转BOM结构
+                string strJson = GetZJBOMJson(dg);
+
+                string CommandType = "CreateBOM";
+                List<www.ufida.org.EntityData.UFIDAU9CustCommonAPISVDocDTOData> dictdtos = new List<UFIDAU9CustCommonAPISVDocDTOData>();
+                Dictionary<string, Hashtable> dic = new Dictionary<string, Hashtable>();
+                string key = string.Empty;
+                Hashtable damicht = new Hashtable();
+                List<string> MasterItemMasters = new List<string>(); ///所有需要创建的bom母件集合
+                string rtnmsg = "";
+                rtnmsg = ZJPostCreatBom(strJson);
+
+                if (rtnmsg != "{\"d\":\"\"}")
                 {
-                    return;
+                    if (rtnmsg.Contains("项目已存在"))
+                    {
+                        return;
+                    }
+                    {
+                        TD.Abort();
+                        msg("创建失败：" + rtnmsg);
+                    }
                 }
+                else
                 {
-                    msg("创建失败：" + rtnmsg);
+                    int cgqty = 0, zzqty = 0, xnqty = 0, gyqty = 0;
+                    List<string> listcg = new List<string>();
+                    List<string> listZz = new List<string>();
+                    for (int iRow = 0; iRow < dataGridView1.Rows.Count; iRow++)
+                    {
+                        string attribute = getstr(dataGridView1.Rows[iRow].Cells["料品形态属性"].Value);
+                        if (attribute == "采购件")
+                        {
+                            if (!listcg.Contains(getstr(dataGridView1.Rows[iRow].Cells["物料编码"].Value)))
+                            {
+                                listcg.Add(getstr(dataGridView1.Rows[iRow].Cells["物料编码"].Value));
+                            }
+                            if (!listZz.Contains(getstr(dataGridView1.Rows[iRow].Cells["母件料品"].Value)))
+                            {
+                                listZz.Add(getstr(dataGridView1.Rows[iRow].Cells["母件料品"].Value));
+                            }
+                        }
+                        else if (attribute == "制造件")
+                        {
+                            if (!listZz.Contains(getstr(dataGridView1.Rows[iRow].Cells["母件料品"].Value)))
+                            {
+                                listZz.Add(getstr(dataGridView1.Rows[iRow].Cells["母件料品"].Value));
+                            }
+                            if (!listZz.Contains(getstr(dataGridView1.Rows[iRow].Cells["物料编码"].Value)))
+                            {
+                                listZz.Add(getstr(dataGridView1.Rows[iRow].Cells["物料编码"].Value));
+                            }
+                        }
+                        else if (attribute == "虚拟")
+                        {
+                            xnqty++;
+                        }
+                        else if (attribute == "工艺")
+                        {
+                            gyqty++;
+                        }
+                    }
+                    cgqty = listcg.Count;
+                    zzqty = listZz.Count;
+                    TD.Abort();
+                    msg("创建bom成功,共导入制造件" + zzqty + "件,采购件" + cgqty + "件,虚拟件" + xnqty + "件,工艺件" + gyqty + "件");
                 }
             }
-            else
+            catch (Exception)
             {
-                msg("创建bom成功");
+                TD.Abort();
+            }
+
+        }
+
+        private void dataGridView1_RowPrePaint(object sender, DataGridViewRowPrePaintEventArgs e)
+        {
+            if (this.tabPage1.Text == "自接物料清单数据")
+            {
+                DataGridViewRow dr = (sender as DataGridView).Rows[e.RowIndex];
+
+                if (dr.Cells["是否虚拟"].Value.ToString().Trim().Equals("是"))
+                {
+                    // 设置单元格的背景色
+                    dr.Cells[6].Style.ForeColor = Color.Red;
+                }
             }
         }
     }
