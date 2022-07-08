@@ -372,7 +372,7 @@ namespace WindowsApplication2
         }
 
         /// <summary>
-        ///自接数据Datagrid数据
+        ///自接数据Excel原始数据
         /// </summary>
         /// <param name="index"></param>
         /// <returns></returns>
@@ -413,7 +413,7 @@ namespace WindowsApplication2
 
 
                 //遍历每个Sheet,从sheet开始
-                for (int p = 1; p <= SheetCount - 1; p++)
+                for (int p = 0; p <= SheetCount - 1; p++)
                 {
                     //实例化sheet
                     ISheet sheet = workbook.GetSheetAt(p);
@@ -454,18 +454,18 @@ namespace WindowsApplication2
                             //5 row.GetCell(14) 单重
                             //6 row.GetCell(16)  备 注
 
-                            //if (j == 6)
-                            //{
-                            //    if (string.IsNullOrEmpty(Convert.ToString(row.GetCell(j))))
-                            //    {
-                            //        dr["料品形态属性"] = "制造件";
-                            //    }
-                            //    else
-                            //    {
-                            //        dr["料品形态属性"] = "采购件";
-                            //    }
-                            //}
-                            dr["料品形态属性"] = "制造件";
+                            if (j == 6)
+                            {
+                                if (string.IsNullOrEmpty(Convert.ToString(row.GetCell(j))))
+                                {
+                                    dr["料品形态属性"] = "虚拟件";
+                                }
+                                else
+                                {
+                                    dr["料品形态属性"] = "制造件";
+                                }
+                            }
+                            //dr["料品形态属性"] = "制造件";
                             if (j == 7)
                             {
                                 dr["序号"] = row.GetCell(j).ToString();
@@ -476,7 +476,24 @@ namespace WindowsApplication2
                             }
                             if (j == 10)
                             {
-                                dr["物料描述"] = row.GetCell(j).ToString();
+                                if (row.GetCell(j).ToString().Contains(","))
+                                {
+                                    string[] str = row.GetCell(j).ToString().Split(',');
+                                    dr["物料描述"] = str[0].Trim();
+                                }
+                                else
+                                {
+                                    if (row.GetCell(j).ToString().Contains("L"))
+                                    {
+                                        string[] str = row.GetCell(j).ToString().Split('L');
+                                        dr["物料描述"] = str[0].Trim();
+                                    }
+                                    else
+                                    {
+                                        dr["物料描述"] = row.GetCell(j).ToString();
+                                    }
+
+                                }
                             }
                             if (j == 12)
                             {
@@ -653,6 +670,8 @@ namespace WindowsApplication2
                             if (str.Count() == 2)
                             {
                                 DataRow row1 = dataTable.Rows.Find(str[0]);
+                                //add by yfj 20220706
+                                if (row1 == null) continue;
                                 dr["序号"] = row["序号"];
                                 dr["母件料品"] = row1["物料编码"];
                                 dr["母件物料描述"] = row1["物料描述"];
@@ -751,6 +770,67 @@ namespace WindowsApplication2
                                 dr["料品形态属性"] = row["料品形态属性"];
                                 dr["备注"] = row["备注"];
                                 dt.Rows.Add(dr);
+
+                                //判断1 - 1 / 1 - 1
+                                if (GetLevelCount2(Convert.ToString(row["序号"]), XhList))
+                                {
+                                    dr["是否末阶"] = "是";
+                                    if (JudgeDs(getItemMasters(Convert.ToString(row["物料描述"]), Convert.ToString(row["材料"]))))
+                                    {
+                                        count++;
+                                        if (count == 1)
+                                        {
+                                            maxcode = GetMaxItemCodeOne();
+                                        }
+                                        else
+                                        {
+                                            maxcode = GetMaxItemCode(maxcode);
+                                        }
+                                        DataRow drr = dt.NewRow();
+                                        drr["序号"] = row["序号"] + "-" + "1";
+                                        string[] wl = Convert.ToString(row["物料编码"]).Split('-');
+                                        drr["母件料品"] = row["物料编码"];
+                                        drr["母件物料描述"] = row["物料描述"];
+                                        drr["母件材料"] = row["材料"];
+                                        drr["母件基本计量单位"] = "KG";
+                                        drr["母件用量"] = row["用量"];
+                                        //dr["物料编码"] = wl[0] + "-" + wl[1] + "-" + wl[2] + "-" + "1" + "-" + "0" + "(" + row["序号"] + "/" + "1" + ")";
+                                        //dr["物料描述"] = wl[0] + "-" + wl[1] + "-" + wl[2] + "-" + "1" + "-" + "0" + "(" + row["序号"] + "/" + "1" + ")";
+                                        drr["物料编码"] = "";
+                                        drr["物料描述"] = row["物料描述"];
+                                        drr["基本计量单位"] = "KG";
+                                        drr["数量/重量"] = row["用量"];
+                                        drr["材料"] = row["材料"];
+                                        drr["单重"] = "0";
+                                        drr["是否虚拟"] = "是";
+                                        drr["料品形态属性"] = "采购件";
+                                        drr["备注"] = row["备注"];
+                                        dt.Rows.Add(drr);
+                                    }
+                                    else
+                                    {
+                                        DataTable dataTable2 = getItemMasters(Convert.ToString(row["物料描述"]), Convert.ToString(row["材料"]));
+                                        DataRow drr = dt.NewRow();
+                                        drr["序号"] = row["序号"] + "-" + "1";
+                                        drr["母件料品"] = row["物料编码"];
+                                        drr["母件物料描述"] = row["物料描述"];
+                                        drr["母件材料"] = row["材料"];
+                                        drr["母件基本计量单位"] = "KG";
+                                        drr["母件用量"] = row["用量"];
+                                        //dr["物料编码"] = wl[0] + "-" + wl[1] + "-" + wl[2] + "-" + "1" + "-" + "0" + "(" + row["序号"] + "/" + "1" + ")";
+                                        //dr["物料描述"] = wl[0] + "-" + wl[1] + "-" + wl[2] + "-" + "1" + "-" + "0" + "(" + row["序号"] + "/" + "1" + ")";
+                                        drr["物料编码"] = dataTable2.Rows[0]["料号"];
+                                        drr["物料描述"] = dataTable2.Rows[0]["品名"];
+                                        drr["基本计量单位"] = "KG";
+                                        drr["数量/重量"] = row["用量"];
+                                        drr["材料"] = dataTable2.Rows[0]["材料"];
+                                        drr["单重"] = 0;
+                                        drr["是否虚拟"] = "是";
+                                        drr["料品形态属性"] = "采购件";
+                                        drr["备注"] = row["备注"];
+                                        dt.Rows.Add(drr);
+                                    }
+                                }
                             }
                             else
                             {
@@ -957,6 +1037,27 @@ namespace WindowsApplication2
             {
                 string[] str = item.Split('/');
                 if (str[0].Contains(XH))
+                {
+                    i++;
+                }
+            }
+            if (i == 1)
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
+
+
+        public bool GetLevelCount3(string XH, List<string> list)
+        {
+            int i = 0;
+            foreach (var item in list)
+            {
+                if (item.Contains(XH))
                 {
                     i++;
                 }

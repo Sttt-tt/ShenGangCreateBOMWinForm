@@ -1070,6 +1070,11 @@ namespace WindowsApplication2
                 DataTable itemDt = this.dataGridView1.DataSource as DataTable;
                 if (itemDt == null || itemDt.Rows.Count <= 0)
                     return;
+                foreach (DataRow row in itemDt.Rows)
+                {
+                    if (row["规格"].ToString().Contains("\""))
+                        row["规格"] = row["规格"].ToString().Replace("\"", "$");
+                }
                 string strJson = JsonConvert.SerializeObject(itemDt);
                 string strResult = HttpClientHelper.DoPost(strJson, "SG_BatchCreatItemMaster");
                 DataTable dt = JsonConvert.DeserializeObject<DataTable>(strResult);
@@ -1080,7 +1085,7 @@ namespace WindowsApplication2
                     itemDt.Columns.Add("错误记录");
                 foreach (DataRow row in itemDt.Rows)
                 {
-                    DataRow[] newRow = dt.Select($"ID={k}");
+                    DataRow[] newRow = dt.Select($"ID='{k}'");
                     if (newRow.Length > 0)
                     {
                         if (Convert.ToBoolean(newRow[0]["IsSuccess"]))
@@ -1094,6 +1099,8 @@ namespace WindowsApplication2
                                 records++;
                             row["物料编码"] = newRow[0]["code"].ToString();
                         }
+                        if (row["规格"].ToString().Contains("$"))
+                            row["规格"] = row["规格"].ToString().Replace("$", "\"");
                         row["错误记录"] = newRow[0]["Error"];
                     }
 
@@ -1129,6 +1136,14 @@ namespace WindowsApplication2
             }
         }
 
+
+        /// <summary>
+        /// 自接物料清单导入
+        /// 创建人：lvhe
+        /// 创建时间：2022-07-08 23:09:59
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void toolStripButton8_Click(object sender, EventArgs e)
         {
             //设置tabpage text
@@ -1149,8 +1164,9 @@ namespace WindowsApplication2
             if (string.IsNullOrEmpty(strFile))
                 return;
             ExcelHelper excelHelper = new ExcelHelper(openFileDialog.FileName);
+            //获取excel原始数据
             DataTable excelDt = excelHelper.ZjExcelToDataTable(1);
-            //拼接BOM格式数据
+            //根据原始数据拼接DataGrid数据
             DataTable bomexcelDt = excelHelper.ZjExcelToBOMDataTable(excelDt);
             this.dataGridView1.DataSource = bomexcelDt;
             //this.dataGridView1.Columns["母件料品"].Visible = false;
@@ -1160,6 +1176,23 @@ namespace WindowsApplication2
             //this.dataGridView1.Columns["母件用量"].Visible = false;
             this.dataGridView1.Columns["是否虚拟"].Visible = false;
             this.dataGridView1.Columns["是否末阶"].Visible = false;
+
+            //隐藏1.2.3.4.5.6.7.8.9.10......
+            for (int i = 0; i < dataGridView1.RowCount; i++)
+            {
+                if (Convert.ToString(dataGridView1.Rows[i].Cells["序号"].Value).IndexOf('-') == -1)
+                {
+                    if (Convert.ToString(dataGridView1.Rows[i].Cells["序号"].Value).IndexOf('/') == -1)
+                    {
+                        CurrencyManager cm = (CurrencyManager)BindingContext[dataGridView1.DataSource];
+                        cm.SuspendBinding(); //挂起数据绑定
+                        dataGridView1.ReadOnly = true; //继续，这行可选，如果你的datagridview是可编辑的就加上
+                        cm.ResumeBinding(); //继续数据绑定
+                        this.dataGridView1.Rows[i].Visible = false;
+                    }
+                }
+
+            }
         }
 
         private void toolStripButton9_Click(object sender, EventArgs e)

@@ -23,7 +23,7 @@ namespace WindowsApplication2.Helper
             client.Timeout = -1;
             var request = new RestRequest(Method.POST);
             request.AddHeader("Content-Type", "application/json");
-            strJson = "" + strJson.Replace("\"", "\\\"") + "";
+            strJson = strJson.Replace("\"", "'").Replace("$","\\\"");
             string OrgCode = DataHelper.getStr(Login.u9ContentHt["OrgCode"]);//上下文组织编码
             string UserCode = DataHelper.getStr(Login.u9ContentHt["UserCode"]);//上下文用户编码
             string EntCode = System.Configuration.ConfigurationManager.AppSettings["EnterpriseID"].ToString();
