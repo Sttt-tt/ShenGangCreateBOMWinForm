@@ -411,7 +411,6 @@ namespace WindowsApplication2
 
                 int SheetCount = workbook.NumberOfSheets;//获取表的数量
 
-
                 //遍历每个Sheet,从sheet开始
                 for (int p = 0; p <= SheetCount - 1; p++)
                 {
@@ -430,7 +429,7 @@ namespace WindowsApplication2
                         {
                             continue;
                         }
-                        if (string.IsNullOrEmpty(Convert.ToString(row.Cells[7])))
+                        if (string.IsNullOrEmpty(Convert.ToString(row.Cells[8])))
                         {
                             continue;
                         }
@@ -472,7 +471,14 @@ namespace WindowsApplication2
                             }
                             if (j == 8)
                             {
-                                dr["物料编码"] = row.GetCell(j).ToString() + "(" + row.GetCell(j - 1).ToString() + ")";
+                                if (string.IsNullOrEmpty(Convert.ToString(row.GetCell(j - 1))))
+                                {
+                                    dr["物料编码"] = row.GetCell(j).ToString();
+                                }
+                                else
+                                {
+                                    dr["物料编码"] = row.GetCell(j).ToString() + "(" + row.GetCell(j - 1).ToString() + ")";
+                                }
                             }
                             if (j == 10)
                             {
@@ -532,25 +538,25 @@ namespace WindowsApplication2
         {
             dataTable.PrimaryKey = new System.Data.DataColumn[] { dataTable.Columns["序号"] };
             //拼接最上层BOM
-            string itemCode = string.Empty;//物料编码
-            string itemName = string.Empty;//物料名称
-            string itemCl = string.Empty;//物料材料
-            int qty = 0;
+            string itemCode = dataTable.Rows[0]["物料编码"].ToString();//物料编码
+            string itemName = dataTable.Rows[0]["物料描述"].ToString();//物料名称
+            string itemCl = dataTable.Rows[0]["材料"].ToString();//物料材料
+            int qty = 1;
             List<string> XhList = new List<string>();//序号集合
             foreach (DataRow item in dataTable.Rows)
             {
                 //拼接最上层母BOM数据
-                if (Convert.ToString(item["序号"]) == "1")
-                {
-                    string[] items = Convert.ToString(item["物料编码"]).Split('-');
-                    itemCode = items[0];
-                    itemName = items[0];
-                    itemCl = Convert.ToString(item["材料"]);
-                }
-                if (!Convert.ToString(item["序号"]).Contains("-"))
-                {
-                    qty += Convert.ToInt32(item["用量"]);
-                }
+                //if (Convert.ToString(item["序号"]) == "1")
+                //{
+                //    string[] items = Convert.ToString(item["物料编码"]).Split('-');
+                //    itemCode = items[0];
+                //    itemName = items[0];
+                //    itemCl = Convert.ToString(item["材料"]);
+                //}
+                //if (!Convert.ToString(item["序号"]).Contains("-"))
+                //{
+                //    qty += Convert.ToInt32(item["用量"]);
+                //}
                 XhList.Add(Convert.ToString(item["序号"]));
             }
             //实例化DataTable来存放数据
@@ -579,6 +585,7 @@ namespace WindowsApplication2
             string maxcode = string.Empty;
             try
             {
+                dataTable.Rows.RemoveAt(0);//移除最上层母件
                 foreach (DataRow row in dataTable.Rows)
                 {
                     DataRow dr = dt.NewRow();
