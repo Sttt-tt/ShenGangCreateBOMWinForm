@@ -45,7 +45,7 @@ namespace WindowsApplication2.VO
             //this.qty = useQty;
             this.private9 = DataHelper.getStr(row.Cells["备注"].Value);//子件料号
             this.material = DataHelper.getStr(row.Cells["材料"].Value);
-            this.weight = DataHelper.getDecimal(row.Cells["单重"].Value);
+            //this.weight = DataHelper.getDecimal(row.Cells["单重"].Value);
         }
 
     }

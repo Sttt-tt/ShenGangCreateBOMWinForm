@@ -453,18 +453,18 @@ namespace WindowsApplication2
                             //5 row.GetCell(14) 单重
                             //6 row.GetCell(16)  备 注
 
-                            if (j == 6)
-                            {
-                                if (string.IsNullOrEmpty(Convert.ToString(row.GetCell(j))))
-                                {
-                                    dr["料品形态属性"] = "虚拟件";
-                                }
-                                else
-                                {
-                                    dr["料品形态属性"] = "制造件";
-                                }
-                            }
-                            //dr["料品形态属性"] = "制造件";
+                            //if (j == 6)
+                            //{
+                            //    if (string.IsNullOrEmpty(Convert.ToString(row.GetCell(j))))
+                            //    {
+                            //        dr["料品形态属性"] = "虚拟件";
+                            //    }
+                            //    else
+                            //    {
+                            //        dr["料品形态属性"] = "制造件";
+                            //    }
+                            //}
+                            dr["料品形态属性"] = "制造件";
                             if (j == 7)
                             {
                                 dr["序号"] = row.GetCell(j).ToString();
@@ -574,7 +574,9 @@ namespace WindowsApplication2
             dt.Columns.Add("基本计量单位");
             dt.Columns.Add("数量/重量");
             dt.Columns.Add("材料");
-            dt.Columns.Add("单重");
+            //dt.Columns.Add("单重");
+
+            dt.Columns.Add("制造路线");
             dt.Columns.Add("是否末阶");
             dt.Columns.Add("是否虚拟");
             //dt.Columns.Add("备  注");
@@ -604,7 +606,7 @@ namespace WindowsApplication2
                         dr["基本计量单位"] = "KG";
                         dr["数量/重量"] = row["用量"];
                         dr["材料"] = row["材料"];
-                        dr["单重"] = row["单重"];
+                        //dr["单重"] = row["单重"];
                         dr["料品形态属性"] = row["料品形态属性"];
                         dr["备注"] = row["备注"];
                         dt.Rows.Add(dr);
@@ -633,11 +635,11 @@ namespace WindowsApplication2
                                 //dr["物料编码"] = wl[0] + "-" + wl[1] + "-" + wl[2] + "-" + "1" + "-" + "0" + "(" + row["序号"] + "/" + "1" + ")";
                                 //dr["物料描述"] = wl[0] + "-" + wl[1] + "-" + wl[2] + "-" + "1" + "-" + "0" + "(" + row["序号"] + "/" + "1" + ")";
                                 drr["物料编码"] = "";
-                                drr["物料描述"] = row["物料描述"];
-                                drr["基本计量单位"] = "KG";
+                                drr["物料描述"] = "";
+                                drr["基本计量单位"] = "";
                                 drr["数量/重量"] = row["用量"];
-                                drr["材料"] = row["材料"];
-                                drr["单重"] = "0";
+                                drr["材料"] = "";
+                                //drr["单重"] = "0";
                                 drr["是否虚拟"] = "是";
                                 drr["料品形态属性"] = "采购件";
                                 drr["备注"] = row["备注"];
@@ -660,7 +662,7 @@ namespace WindowsApplication2
                                 drr["基本计量单位"] = "KG";
                                 drr["数量/重量"] = row["用量"];
                                 drr["材料"] = dataTable1.Rows[0]["材料"];
-                                drr["单重"] = 0;
+                                //drr["单重"] = 0;
                                 drr["是否虚拟"] = "是";
                                 drr["料品形态属性"] = "采购件";
                                 drr["备注"] = row["备注"];
@@ -690,7 +692,7 @@ namespace WindowsApplication2
                                 dr["基本计量单位"] = "KG";
                                 dr["数量/重量"] = row["用量"];
                                 dr["材料"] = row["材料"];
-                                dr["单重"] = row["单重"];
+                                //dr["单重"] = row["单重"];
                                 dr["料品形态属性"] = row["料品形态属性"];
                                 dr["备注"] = row["备注"];
                                 dt.Rows.Add(dr);
@@ -720,11 +722,11 @@ namespace WindowsApplication2
                                     //dr["物料编码"] = wl[0] + "-" + wl[1] + "-" + wl[2] + "-" + "1" + "-" + "0" + "(" + row["序号"] + "/" + "1" + ")";
                                     //dr["物料描述"] = wl[0] + "-" + wl[1] + "-" + wl[2] + "-" + "1" + "-" + "0" + "(" + row["序号"] + "/" + "1" + ")";
                                     drr["物料编码"] = "";
-                                    drr["物料描述"] = row["物料描述"];
-                                    drr["基本计量单位"] = "KG";
+                                    drr["物料描述"] = "";
+                                    drr["基本计量单位"] = "";
                                     drr["数量/重量"] = row["用量"];
-                                    drr["材料"] = row["材料"];
-                                    drr["单重"] = "0";
+                                    drr["材料"] = "";
+                                    //drr["单重"] = "0";
                                     drr["是否虚拟"] = "是";
                                     drr["料品形态属性"] = "采购件";
                                     drr["备注"] = row["备注"];
@@ -747,7 +749,7 @@ namespace WindowsApplication2
                                     drr["基本计量单位"] = "KG";
                                     drr["数量/重量"] = row["用量"];
                                     drr["材料"] = dataTable2.Rows[0]["材料"];
-                                    drr["单重"] = 0;
+                                    //drr["单重"] = 0;
                                     drr["是否虚拟"] = "是";
                                     drr["料品形态属性"] = "采购件";
                                     drr["备注"] = row["备注"];
@@ -772,7 +774,7 @@ namespace WindowsApplication2
                                 dr["物料描述"] = row["物料描述"];
                                 dr["基本计量单位"] = "KG";
                                 dr["数量/重量"] = row["用量"];
-                                dr["单重"] = row["单重"];
+                                //dr["单重"] = row["单重"];
                                 dr["材料"] = row["材料"];
                                 dr["料品形态属性"] = row["料品形态属性"];
                                 dr["备注"] = row["备注"];
@@ -804,11 +806,11 @@ namespace WindowsApplication2
                                         //dr["物料编码"] = wl[0] + "-" + wl[1] + "-" + wl[2] + "-" + "1" + "-" + "0" + "(" + row["序号"] + "/" + "1" + ")";
                                         //dr["物料描述"] = wl[0] + "-" + wl[1] + "-" + wl[2] + "-" + "1" + "-" + "0" + "(" + row["序号"] + "/" + "1" + ")";
                                         drr["物料编码"] = "";
-                                        drr["物料描述"] = row["物料描述"];
-                                        drr["基本计量单位"] = "KG";
+                                        drr["物料描述"] = "";
+                                        drr["基本计量单位"] = "";
                                         drr["数量/重量"] = row["用量"];
-                                        drr["材料"] = row["材料"];
-                                        drr["单重"] = "0";
+                                        drr["材料"] = "";
+                                        //drr["单重"] = "0";
                                         drr["是否虚拟"] = "是";
                                         drr["料品形态属性"] = "采购件";
                                         drr["备注"] = row["备注"];
@@ -831,7 +833,7 @@ namespace WindowsApplication2
                                         drr["基本计量单位"] = "KG";
                                         drr["数量/重量"] = row["用量"];
                                         drr["材料"] = dataTable2.Rows[0]["材料"];
-                                        drr["单重"] = 0;
+                                        //drr["单重"] = 0;
                                         drr["是否虚拟"] = "是";
                                         drr["料品形态属性"] = "采购件";
                                         drr["备注"] = row["备注"];
@@ -855,7 +857,7 @@ namespace WindowsApplication2
                                 dr["基本计量单位"] = "KG";
                                 dr["数量/重量"] = row["用量"];
                                 dr["材料"] = row["材料"];
-                                dr["单重"] = row["单重"];
+                                //dr["单重"] = row["单重"];
                                 dr["料品形态属性"] = row["料品形态属性"];
                                 dr["备注"] = row["备注"];
                                 dt.Rows.Add(dr);
@@ -886,11 +888,11 @@ namespace WindowsApplication2
                                         //dr["物料编码"] = wl[0] + "-" + wl[1] + "-" + wl[2] + "-" + "1" + "-" + "0" + "(" + row["序号"] + "/" + "1" + ")";
                                         //dr["物料描述"] = wl[0] + "-" + wl[1] + "-" + wl[2] + "-" + "1" + "-" + "0" + "(" + row["序号"] + "/" + "1" + ")";
                                         drr["物料编码"] = "";
-                                        drr["物料描述"] = row["物料描述"];
-                                        drr["基本计量单位"] = "KG";
+                                        drr["物料描述"] = "";
+                                        drr["基本计量单位"] = "";
                                         drr["数量/重量"] = row["用量"];
-                                        drr["材料"] = row["材料"];
-                                        drr["单重"] = "0";
+                                        drr["材料"] = "";
+                                        //drr["单重"] = "0";
                                         drr["是否虚拟"] = "是";
                                         drr["料品形态属性"] = "采购件";
                                         drr["备注"] = row["备注"];
@@ -913,7 +915,7 @@ namespace WindowsApplication2
                                         drr["基本计量单位"] = "KG";
                                         drr["数量/重量"] = row["用量"];
                                         drr["材料"] = dataTable2.Rows[0]["材料"];
-                                        drr["单重"] = 0;
+                                        //drr["单重"] = 0;
                                         drr["是否虚拟"] = "是";
                                         drr["料品形态属性"] = "采购件";
                                         drr["备注"] = row["备注"];

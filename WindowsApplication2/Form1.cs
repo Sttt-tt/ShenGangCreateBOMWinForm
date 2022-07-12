@@ -687,6 +687,7 @@ namespace WindowsApplication2
                     dto.material = material;
                     dto.qty = pInvQty;
                     //dto.private2 = DataHelper.getStr(row.Cells["工艺路线"].Value);
+                    dto.private2 = DataHelper.getStr(row.Cells["制造路线"].Value);
                     dto.rows.Add(new BomLineVOZJ(row));
                     dtos.Add(dto);
                 }
@@ -1186,7 +1187,7 @@ namespace WindowsApplication2
                     {
                         CurrencyManager cm = (CurrencyManager)BindingContext[dataGridView1.DataSource];
                         cm.SuspendBinding(); //挂起数据绑定
-                        dataGridView1.ReadOnly = true; //继续，这行可选，如果你的datagridview是可编辑的就加上
+                        //dataGridView1.ReadOnly = true; //继续，这行可选，如果你的datagridview是可编辑的就加上
                         cm.ResumeBinding(); //继续数据绑定
                         this.dataGridView1.Rows[i].Visible = false;
                     }
