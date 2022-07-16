@@ -15,18 +15,52 @@ using RestSharp;
 using WindowsApplication2.VO;
 using WindowsApplication2.Helper;
 using Newtonsoft.Json;
+using System.Data.SqlClient;
+using System.Configuration;
+using ERP8.Common;
 
 namespace WindowsApplication2
 {
     public partial class Form1 : Form
     {
+        string EntCode = getstr(Login.u9ContentHt["OrgCode"]);//上下文组织编码
+        private static string connectionString = ConfigurationManager.AppSettings["Conn"];
         public Form1()
         {
+
             InitializeComponent();
             //this.tabControl1.Visible = false;
             //this.tabControl1.TabPages.Remove(this.tabPage2);
             this.comboBox1.Visible = false;
             //this.tabControl1.TabPages.AddRange(this.tabPage1);
+            toolStripComboBox1.ComboBox.Text = "";
+            toolStripComboBox2.ComboBox.Text = "";
+            string str = "select wbs from cust_bomsg_data where wbs not in(select A1.Code from CBO_BOMMaster  A left join CBO_ItemMaster  A1 on A.ItemMaster=A1.ID left join Base_Organization A2 on A.Org=A2.ID where A2.Code='" + EntCode + "') group by wbs                                        ";
+            DataSet ds = SqlHelper.ExecuteDataset(connectionString, CommandType.Text, str);
+
+            if (!JudgeDs(ds))
+            {
+                toolStripComboBox1.ComboBox.Items.Add("上锅物料清单查询");
+                foreach (DataRow dr in ds.Tables[0].Rows)
+                {
+                    toolStripComboBox1.ComboBox.Items.Add(dr["wbs"].ToString());
+                }
+            }
+
+            string str2 = "select wbs from cust_bomzj_data where wbs not in(select A1.Code from CBO_BOMMaster  A left join CBO_ItemMaster  A1 on A.ItemMaster=A1.ID left join Base_Organization A2 on A.Org=A2.ID where A2.Code='" + EntCode + "') group by wbs                                        ";
+            DataSet ds2 = SqlHelper.ExecuteDataset(connectionString, CommandType.Text, str2);
+
+            if (!JudgeDs(ds))
+            {
+                toolStripComboBox2.ComboBox.Items.Add("自接物料清单查询");
+                foreach (DataRow dr in ds2.Tables[0].Rows)
+                {
+                    toolStripComboBox2.ComboBox.Items.Add(dr["wbs"].ToString());
+                }
+            }
+
+            toolStripComboBox1.ComboBox.SelectedIndex = 0;
+            toolStripComboBox2.ComboBox.SelectedIndex = 0;
         }
         private void ShowProgressForm()
         {
@@ -94,7 +128,7 @@ namespace WindowsApplication2
         }
         private FlexCell.Grid grid1 = new FlexCell.Grid();
 
-
+        DataTable dtsg = new DataTable();//上锅物料清单datatable
 
 
         #region <<按钮事件集合>>
@@ -140,6 +174,7 @@ namespace WindowsApplication2
             //Form1.dataGridView4.DataSource = changedt_bom(dt);
 
             dataGridView1.DataSource = dt;
+            dtsg = dt;
 
             for (int iRow = 0; iRow < dataGridView1.Rows.Count; iRow++)
             {
@@ -622,6 +657,7 @@ namespace WindowsApplication2
         }
 
 
+
         #region <<拼接数据方法和调用U9创建BOM接口>>
         /// <summary>
         /// 获取BOM结构数据
@@ -1030,6 +1066,22 @@ namespace WindowsApplication2
             return lg;
         }
 
+
+        /// <summary>  
+        /// 判断DS是否为空  
+        /// </summary>  
+        /// <param name="ds">需要判断的ds</param>  
+        /// <returns>如果ds为空，返回true</returns>  
+        private bool JudgeDs(DataSet ds)
+        {
+            bool Flag = false;
+            if ((ds == null) || (ds.Tables.Count == 0) || (ds.Tables.Count == 1 && ds.Tables[0].Rows.Count == 0))
+            {
+                Flag = true;
+            }
+            return Flag;
+        }
+
         #endregion
 
         private void toolStripButton7_Click(object sender, EventArgs e)
@@ -1137,7 +1189,7 @@ namespace WindowsApplication2
             }
         }
 
-
+        DataTable dtzj = new DataTable();//上锅物料清单datatable
         /// <summary>
         /// 自接物料清单导入
         /// 创建人：lvhe
@@ -1169,6 +1221,7 @@ namespace WindowsApplication2
             DataTable excelDt = excelHelper.ZjExcelToDataTable(1);
             //根据原始数据拼接DataGrid数据
             DataTable bomexcelDt = excelHelper.ZjExcelToBOMDataTable(excelDt);
+            dtzj = bomexcelDt;
             this.dataGridView1.DataSource = bomexcelDt;
             //this.dataGridView1.Columns["母件料品"].Visible = false;
             //this.dataGridView1.Columns["母件物料描述"].Visible = false;
@@ -1177,6 +1230,7 @@ namespace WindowsApplication2
             //this.dataGridView1.Columns["母件用量"].Visible = false;
             this.dataGridView1.Columns["是否虚拟"].Visible = false;
             this.dataGridView1.Columns["是否末阶"].Visible = false;
+            this.dataGridView1.Columns["wbs"].Visible = false;
 
             //隐藏1.2.3.4.5.6.7.8.9.10......
             for (int i = 0; i < dataGridView1.RowCount; i++)
@@ -1298,6 +1352,85 @@ namespace WindowsApplication2
                     dr.Cells[6].Style.ForeColor = Color.Red;
                 }
             }
+        }
+
+
+
+        /// <summary>
+        /// 保存数据
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void toolStripButton10_Click(object sender, EventArgs e)
+        {
+            if (dataGridView1.DataSource == null) return;
+
+            if (this.tabPage1.Text == "物料清单数据")
+            {
+                SqlBulkCopyHelper.SqlBulkCopyByDatatable("cust_bomsg_data", dtsg);
+            }
+            if (this.tabPage1.Text == "自接物料清单数据")
+            {
+                SqlBulkCopyHelper.SqlBulkCopyByDatatable("Cust_BomZj_Data", dtzj);
+            }
+        }
+
+        private void toolStripComboBox1_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            string code = string.Empty;
+            string str = string.Empty;
+            code = ((System.Windows.Forms.ToolStripComboBox)sender).SelectedItem.ToString();
+            if (code == "上锅物料清单查询") return;
+            //设置tabpage text
+            if (this.tabPage1.Text != "物料清单数据")
+            {
+                this.tabPage1.Text = "物料清单数据";
+                this.tabPage1.Refresh();
+            }
+           
+            str = "select 序号,WBS,展开层,母件料品,母件物料描述,母件基本计量单位,母件用量,物料编码,物料描述,BOM用途,物料类型,基本计量单位,[数量/重量],尺寸,料品形态属性,工艺路线,备注 from Cust_BomSG_Data where wbs='" + code + "' order by 母件料品 asc,物料描述 asc";
+            DataSet ds = SqlHelper.ExecuteDataset(connectionString, CommandType.Text, str);
+            this.dataGridView1.DataSource = ds.Tables[0];
+            initDataGrid(dataGridView1);
+        }
+
+        private void toolStripComboBox2_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            string code = string.Empty;
+            string str = string.Empty;
+            code = ((System.Windows.Forms.ToolStripComboBox)sender).SelectedItem.ToString();
+            if (code == "自接物料清单查询") return;
+            //设置tabpage text
+            if (this.tabPage1.Text != "自接物料清单数据")
+            {
+                this.tabPage1.Text = "自接物料清单数据";
+                this.tabPage1.Refresh();
+            }
+            str = "select 序号,母件料品,母件物料描述,母件材料,母件基本计量单位,母件用量,物料编码,物料描述,基本计量单位,[数量/重量],材料,制造路线,是否末阶,是否虚拟,wbs,料品形态属性,备注 from Cust_BomZJ_Data where wbs='" + code + "'";
+            DataSet ds = SqlHelper.ExecuteDataset(connectionString, CommandType.Text, str);
+            this.dataGridView1.DataSource = ds.Tables[0];
+
+            this.dataGridView1.Columns["是否虚拟"].Visible = false;
+            this.dataGridView1.Columns["是否末阶"].Visible = false;
+            this.dataGridView1.Columns["wbs"].Visible = false;
+
+            //隐藏1.2.3.4.5.6.7.8.9.10......
+            for (int i = 0; i < dataGridView1.RowCount; i++)
+            {
+                if (Convert.ToString(dataGridView1.Rows[i].Cells["序号"].Value).IndexOf('-') == -1)
+                {
+                    if (Convert.ToString(dataGridView1.Rows[i].Cells["序号"].Value).IndexOf('/') == -1)
+                    {
+                        CurrencyManager cm = (CurrencyManager)BindingContext[dataGridView1.DataSource];
+                        cm.SuspendBinding(); //挂起数据绑定
+                        //dataGridView1.ReadOnly = true; //继续，这行可选，如果你的datagridview是可编辑的就加上
+                        cm.ResumeBinding(); //继续数据绑定
+                        this.dataGridView1.Rows[i].Visible = false;
+                    }
+                }
+
+            }
+            //initDataGrid(dataGridView1);
         }
     }
 }

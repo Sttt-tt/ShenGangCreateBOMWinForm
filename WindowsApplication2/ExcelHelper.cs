@@ -579,6 +579,7 @@ namespace WindowsApplication2
             dt.Columns.Add("制造路线");
             dt.Columns.Add("是否末阶");
             dt.Columns.Add("是否虚拟");
+            dt.Columns.Add("wbs");
             //dt.Columns.Add("备  注");
             dt.Columns.Add("料品形态属性");
             dt.Columns.Add("备注");
@@ -609,6 +610,7 @@ namespace WindowsApplication2
                         //dr["单重"] = row["单重"];
                         dr["料品形态属性"] = row["料品形态属性"];
                         dr["备注"] = row["备注"];
+                        dr["wbs"] = itemCode;
                         dt.Rows.Add(dr);
 
                         if (GetLevel1Count(Convert.ToString(row["序号"]), XhList))
@@ -626,6 +628,7 @@ namespace WindowsApplication2
                                     maxcode = GetMaxItemCode(maxcode);
                                 }
                                 DataRow drr = dt.NewRow();
+                                drr["wbs"] = itemCode;
                                 drr["序号"] = row["序号"] + "-" + "1";
                                 drr["母件料品"] = row["物料编码"];
                                 drr["母件物料描述"] = row["物料描述"];
@@ -649,6 +652,7 @@ namespace WindowsApplication2
                             {
                                 DataTable dataTable1 = getItemMasters(Convert.ToString(row["物料描述"]), Convert.ToString(row["材料"]));
                                 DataRow drr = dt.NewRow();
+                                drr["wbs"] = itemCode;
                                 drr["序号"] = row["序号"] + "-" + "1";
                                 drr["母件料品"] = row["物料编码"];
                                 drr["母件物料描述"] = row["物料描述"];
@@ -679,6 +683,7 @@ namespace WindowsApplication2
                             if (str.Count() == 2)
                             {
                                 DataRow row1 = dataTable.Rows.Find(str[0]);
+                                dr["wbs"] = itemCode;
                                 //add by yfj 20220706
                                 if (row1 == null) continue;
                                 dr["序号"] = row["序号"];
@@ -712,6 +717,7 @@ namespace WindowsApplication2
                                         maxcode = GetMaxItemCode(maxcode);
                                     }
                                     DataRow drr = dt.NewRow();
+                                    drr["wbs"] = itemCode;
                                     drr["序号"] = row["序号"] + "/" + "1";
                                     string[] wl = Convert.ToString(row["物料编码"]).Split('-');
                                     drr["母件料品"] = row["物料编码"];
@@ -736,6 +742,7 @@ namespace WindowsApplication2
                                 {
                                     DataTable dataTable2 = getItemMasters(Convert.ToString(row["物料描述"]), Convert.ToString(row["材料"]));
                                     DataRow drr = dt.NewRow();
+                                    drr["wbs"] = itemCode;
                                     drr["序号"] = row["序号"] + "/" + "1";
                                     drr["母件料品"] = row["物料编码"];
                                     drr["母件物料描述"] = row["物料描述"];
@@ -764,6 +771,7 @@ namespace WindowsApplication2
                             {
                                 string[] str2 = Convert.ToString(row["序号"]).Split('/');
                                 DataRow row2 = dataTable.Rows.Find(str2[0]);
+                                dr["wbs"] = itemCode;
                                 dr["序号"] = row["序号"];
                                 dr["母件料品"] = row2["物料编码"];
                                 dr["母件物料描述"] = row2["物料描述"];
@@ -796,6 +804,7 @@ namespace WindowsApplication2
                                             maxcode = GetMaxItemCode(maxcode);
                                         }
                                         DataRow drr = dt.NewRow();
+                                        drr["wbs"] = itemCode;
                                         drr["序号"] = row["序号"] + "-" + "1";
                                         string[] wl = Convert.ToString(row["物料编码"]).Split('-');
                                         drr["母件料品"] = row["物料编码"];
@@ -820,6 +829,7 @@ namespace WindowsApplication2
                                     {
                                         DataTable dataTable2 = getItemMasters(Convert.ToString(row["物料描述"]), Convert.ToString(row["材料"]));
                                         DataRow drr = dt.NewRow();
+                                        drr["wbs"] = itemCode;
                                         drr["序号"] = row["序号"] + "-" + "1";
                                         drr["母件料品"] = row["物料编码"];
                                         drr["母件物料描述"] = row["物料描述"];
@@ -846,6 +856,7 @@ namespace WindowsApplication2
                                 int index = Convert.ToString(row["序号"]).IndexOf("/") + 2;
                                 string str3 = Convert.ToString(row["序号"]).Substring(0, index);
                                 DataRow row3 = dataTable.Rows.Find(str3);
+                                dr["wbs"] = itemCode;
                                 dr["序号"] = row["序号"];
                                 dr["母件料品"] = row3["物料编码"];
                                 dr["母件物料描述"] = row3["物料描述"];
@@ -878,6 +889,7 @@ namespace WindowsApplication2
                                             maxcode = GetMaxItemCode(maxcode);
                                         }
                                         DataRow drr = dt.NewRow();
+                                        drr["wbs"] = itemCode;
                                         drr["序号"] = row["序号"] + "/" + "1";
                                         string[] wl = Convert.ToString(row["物料编码"]).Split('-');
                                         drr["母件料品"] = row["物料编码"];
@@ -902,6 +914,7 @@ namespace WindowsApplication2
                                     {
                                         DataTable dataTable2 = getItemMasters(Convert.ToString(row["物料描述"]), Convert.ToString(row["材料"]));
                                         DataRow drr = dt.NewRow();
+                                        drr["wbs"] = itemCode;
                                         drr["序号"] = row["序号"] + "/" + "1";
                                         drr["母件料品"] = row["物料编码"];
                                         drr["母件物料描述"] = row["物料描述"];
@@ -933,7 +946,6 @@ namespace WindowsApplication2
 
                 string msg = ex.Message;
             }
-
             return dt;
         }
 
