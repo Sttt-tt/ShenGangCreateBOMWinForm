@@ -915,8 +915,36 @@ namespace WindowsApplication2
                 //如果是物料描述列修改  则进入新的form2
                 if (e.ColumnIndex == 8)
                 {
-                    Form2 form2 = new Form2(value);
-                    form2.Show();
+                    string[] temps = value.Split('_');
+                    //如果是3段  精确查找
+                    if (temps.Length >= 3)
+                    {
+                        string sql = string.Format(@"select '0000000000'+Code 料号,Name +'_'+DescFlexField_PrivateDescSeg1+'_'+SPECS 品名 from CBO_ItemMaster where DescFlexField_PrivateDescSeg1 = '{0}' 
+                                        and SPECS='{1}' group by Code,name,SPECS,DescFlexField_PrivateDescSeg1", temps[1], temps[2]);
+                        DataTable dt = MiddleDBInterface.getdt(sql, SQLHelper.sqlconn(Login.strConn));
+                        if (dt.Rows.Count == 1)
+                        {
+                            DataGridViewRow row = dataGridView1.CurrentRow;
+                            if (row.Cells[0].Value == null) return;
+                            int index1 = this.dataGridView1.CurrentRow.Index - 1;//由于按回车行索引会自动跳下下一行，所以取当前索引的上一行
+                            DataGridViewRow row2 = this.dataGridView1.Rows[index1];
+                            this.dataGridView1.Rows[index].Cells[8].Selected = true;
+                            this.dataGridView1.Rows[index + 1].Cells[8].Selected = false;
+                            row2.Cells["物料编码"].Value = row.Cells[0].Value;//0是编码，1是描述
+                            row2.Cells["物料描述"].Value = row.Cells[1].Value;//0是编码，1是描述
+                        }
+                        else
+                        {
+                            Form2 form2 = new Form2();
+                            form2.Show();
+                        }
+                    }
+                    else
+                    {
+                        Form2 form2 = new Form2();
+                        form2.Show();
+                    }
+
                 }
                 else if (e.ColumnIndex == 15)
                 {
@@ -1387,7 +1415,7 @@ namespace WindowsApplication2
                 this.tabPage1.Text = "物料清单数据";
                 this.tabPage1.Refresh();
             }
-           
+
             str = "select 序号,WBS,展开层,母件料品,母件物料描述,母件基本计量单位,母件用量,物料编码,物料描述,BOM用途,物料类型,基本计量单位,[数量/重量],尺寸,料品形态属性,工艺路线,备注 from Cust_BomSG_Data where wbs='" + code + "' order by 母件料品 asc,物料描述 asc";
             DataSet ds = SqlHelper.ExecuteDataset(connectionString, CommandType.Text, str);
             this.dataGridView1.DataSource = ds.Tables[0];

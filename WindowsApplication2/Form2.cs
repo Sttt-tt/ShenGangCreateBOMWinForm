@@ -15,11 +15,11 @@ namespace WindowsApplication2
     /// </summary>
     public partial class Form2 : Form
     {
-        public Form2(string itemvalue)
+        public Form2()
         {
             InitializeComponent();
             this.StartPosition = FormStartPosition.CenterScreen;
-            this.dataGridView1.DataSource = getItemMasters(itemvalue);
+            //this.dataGridView1.DataSource = getItemMasters(itemvalue);
         }
 
         /// <summary>
@@ -74,15 +74,37 @@ namespace WindowsApplication2
         private void dataGridView1_Currentduoubleclick(object sender, EventArgs e)
         {
 
+            Form1 form1 = (Form1)this.Owner;
+            //注意如果datagridview1是放在panel1中的则先找panel1 再找datagridview1
+            //这个就是form1的datagridview1了，想怎么操作就怎么操作
             DataGridViewRow row = dataGridView1.CurrentRow;
             if (row.Cells[0].Value == null) return;
-            int index = this.dataGridView1.CurrentRow.Index - 1;//由于按回车行索引会自动跳下下一行，所以取当前索引的上一行
-            DataGridViewRow row2 = this.dataGridView1.Rows[index];
-            this.dataGridView1.Rows[index].Cells[8].Selected = true;
-            this.dataGridView1.Rows[index + 1].Cells[8].Selected = false;
+            int index = ((DataGridView)form1.Controls["datagridview1"]).CurrentRow.Index - 1;//由于按回车行索引会自动跳下下一行，所以取当前索引的上一行
+            DataGridViewRow row2 = ((DataGridView)form1.Controls["datagridview1"]).Rows[index];
+            ((DataGridView)form1.Controls["datagridview1"]).Rows[index].Cells[8].Selected = true;
+            ((DataGridView)form1.Controls["datagridview1"]).Rows[index + 1].Cells[8].Selected = false;
             row2.Cells["物料编码"].Value = row.Cells[0].Value;//0是编码，1是描述
             row2.Cells["物料描述"].Value = row.Cells[1].Value;//0是编码，1是描述
             this.Close();
+        }
+
+        private void toolStripButton10_Click(object sender, EventArgs e)
+        {
+            if (string.IsNullOrEmpty(toolStripTextBox1.Text))
+            {
+                MessageBox.Show("请先输入物料规格");
+            }
+
+            if (string.IsNullOrEmpty(toolStripTextBox2.Text))
+            {
+                MessageBox.Show("请先输入物料材质");
+            }
+            string sql = string.Format(@"select '0000000000'+Code 料号,Name +'_'+DescFlexField_PrivateDescSeg1+'_'+SPECS 品名 from CBO_ItemMaster where DescFlexField_PrivateDescSeg1 = '{0}' 
+                                        and SPECS='{1}' group by Code,name,SPECS,DescFlexField_PrivateDescSeg1
+                                        ", toolStripTextBox2.Text, toolStripTextBox1.Text);
+            DataTable dt = MiddleDBInterface.getdt(sql, SQLHelper.sqlconn(Login.strConn));
+            this.dataGridView1.DataSource = dt;
+
         }
     }
 }
