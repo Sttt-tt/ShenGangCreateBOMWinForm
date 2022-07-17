@@ -25,6 +25,9 @@ namespace WindowsApplication2
     {
         string EntCode = getstr(Login.u9ContentHt["OrgCode"]);//上下文组织编码
         private static string connectionString = ConfigurationManager.AppSettings["Conn"];
+
+        public delegate void AsynUpdateUI(string controlname, string valuse);
+        public static string controlname = "";
         public Form1()
         {
 
@@ -909,7 +912,6 @@ namespace WindowsApplication2
             {
                 int index = e.ColumnIndex;
                 string value = dataGridView1[e.ColumnIndex, e.RowIndex].Value?.ToString();
-
                 string mjItemCode = dataGridView1[3, e.RowIndex].Value?.ToString();
 
                 //如果是物料描述列修改  则进入新的form2
@@ -924,25 +926,25 @@ namespace WindowsApplication2
                         DataTable dt = MiddleDBInterface.getdt(sql, SQLHelper.sqlconn(Login.strConn));
                         if (dt.Rows.Count == 1)
                         {
-                            DataGridViewRow row = dataGridView1.CurrentRow;
-                            if (row.Cells[0].Value == null) return;
                             int index1 = this.dataGridView1.CurrentRow.Index - 1;//由于按回车行索引会自动跳下下一行，所以取当前索引的上一行
                             DataGridViewRow row2 = this.dataGridView1.Rows[index1];
-                            this.dataGridView1.Rows[index].Cells[8].Selected = true;
-                            this.dataGridView1.Rows[index + 1].Cells[8].Selected = false;
-                            row2.Cells["物料编码"].Value = row.Cells[0].Value;//0是编码，1是描述
-                            row2.Cells["物料描述"].Value = row.Cells[1].Value;//0是编码，1是描述
+                            this.dataGridView1.Rows[index1].Cells[8].Selected = true;
+                            this.dataGridView1.Rows[index1 + 1].Cells[8].Selected = false;
+                            row2.Cells["物料编码"].Value = dt.Rows[0]["料号"];//0是编码，1是描述
+                            row2.Cells["物料描述"].Value = dt.Rows[0]["品名"]; ;//0是编码，1是描述
                         }
                         else
                         {
-                            Form2 form2 = new Form2();
-                            form2.Show();
+                            controlname = ((DataGridView)sender).Name;
+                            Form2 f = new Form2(controlname);
+                            f.Show();
+                            f.form2UserControls += UpdataUIValue;
                         }
                     }
                     else
                     {
-                        Form2 form2 = new Form2();
-                        form2.Show();
+                        //Form2 form2 = new Form2();
+                        //form2.Show();
                     }
 
                 }
@@ -959,6 +961,21 @@ namespace WindowsApplication2
             }
 
 
+        }
+
+        public void UpdataUIValue(string controlname, string code, string name)
+        {
+            switch (controlname)
+            {
+                case "dataGridView1":
+                    int index = this.dataGridView1.CurrentRow.Index - 1;//由于按回车行索引会自动跳下下一行，所以取当前索引的上一行
+                    DataGridViewRow row2 = this.dataGridView1.Rows[index];
+                    this.dataGridView1.Rows[index].Cells[8].Selected = true;
+                    this.dataGridView1.Rows[index + 1].Cells[8].Selected = false;
+                    row2.Cells["物料编码"].Value = code;//0是编码，1是描述
+                    row2.Cells["物料描述"].Value = name;//0是编码，1是描述
+                    break;
+            }
         }
 
         /// <summary>

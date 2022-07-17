@@ -15,11 +15,17 @@ namespace WindowsApplication2
     /// </summary>
     public partial class Form2 : Form
     {
-        public Form2()
+
+        public delegate void form2UserControlValue(string controlname, string code, string name);
+        public form2UserControlValue form2UserControls;
+        private string form1contorlname = "";
+        public Form2(string contorlname)
         {
             InitializeComponent();
             this.StartPosition = FormStartPosition.CenterScreen;
             //this.dataGridView1.DataSource = getItemMasters(itemvalue);
+            form1contorlname = contorlname;
+
         }
 
         /// <summary>
@@ -73,18 +79,9 @@ namespace WindowsApplication2
         /// <param name="e"></param>
         private void dataGridView1_Currentduoubleclick(object sender, EventArgs e)
         {
-
-            Form1 form1 = (Form1)this.Owner;
-            //注意如果datagridview1是放在panel1中的则先找panel1 再找datagridview1
-            //这个就是form1的datagridview1了，想怎么操作就怎么操作
             DataGridViewRow row = dataGridView1.CurrentRow;
             if (row.Cells[0].Value == null) return;
-            int index = ((DataGridView)form1.Controls["datagridview1"]).CurrentRow.Index - 1;//由于按回车行索引会自动跳下下一行，所以取当前索引的上一行
-            DataGridViewRow row2 = ((DataGridView)form1.Controls["datagridview1"]).Rows[index];
-            ((DataGridView)form1.Controls["datagridview1"]).Rows[index].Cells[8].Selected = true;
-            ((DataGridView)form1.Controls["datagridview1"]).Rows[index + 1].Cells[8].Selected = false;
-            row2.Cells["物料编码"].Value = row.Cells[0].Value;//0是编码，1是描述
-            row2.Cells["物料描述"].Value = row.Cells[1].Value;//0是编码，1是描述
+            form2UserControls(form1contorlname, row.Cells[0].Value.ToString(), row.Cells[1].Value.ToString());
             this.Close();
         }
 
