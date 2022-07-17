@@ -28,6 +28,9 @@ namespace WindowsApplication2
 
         public delegate void AsynUpdateUI(string controlname, string valuse);
         public static string controlname = "";
+
+        public delegate void AsynUpdateUI2(string controlname, string valuse);
+        public static string controlname3 = "";
         public Form1()
         {
 
@@ -894,7 +897,7 @@ namespace WindowsApplication2
             {
 
                 //是否是末级物料
-                string sfmj = dataGridView1[12, e.RowIndex].Value?.ToString();
+                string sfmj = dataGridView1[13, e.RowIndex].Value?.ToString();
                 if (sfmj != "是") return;
 
                 int index = e.ColumnIndex;
@@ -904,8 +907,13 @@ namespace WindowsApplication2
                 //如果是物料描述列修改  则进入新的form2
                 if (e.ColumnIndex == 7)
                 {
-                    Form3 form = new Form3(value, itemCz);
-                    form.Show();
+                    //Form3 form = new Form3(value, itemCz);
+                    //form.Show();
+
+                    controlname3 = ((DataGridView)sender).Name;
+                    Form3 f = new Form3(controlname3);
+                    f.Show();
+                    f.form3UserControls += UpdataUIValue3;
                 }
             }
             else
@@ -943,8 +951,10 @@ namespace WindowsApplication2
                     }
                     else
                     {
-                        //Form2 form2 = new Form2();
-                        //form2.Show();
+                        controlname = ((DataGridView)sender).Name;
+                        Form2 f = new Form2(controlname);
+                        f.Show();
+                        f.form2UserControls += UpdataUIValue;
                     }
 
                 }
@@ -963,6 +973,31 @@ namespace WindowsApplication2
 
         }
 
+
+        /// 保留中文字符
+        /// </summary>
+        /// <param name="str"></param>
+        /// <returns></returns>
+        public static string KeepChinese(string str)
+        {
+            //声明存储结果的字符串
+            string chineseString = "";
+
+
+            //将传入参数中的中文字符添加到结果字符串中
+            for (int i = 0; i < str.Length; i++)
+            {
+                if (str[i] >= 0x4E00 && str[i] <= 0x9FA5) //汉字
+                {
+                    chineseString += str[i];
+                }
+            }
+
+
+            //返回保留中文的处理结果
+            return chineseString;
+        }
+
         public void UpdataUIValue(string controlname, string code, string name)
         {
             switch (controlname)
@@ -974,6 +1009,23 @@ namespace WindowsApplication2
                     this.dataGridView1.Rows[index + 1].Cells[8].Selected = false;
                     row2.Cells["物料编码"].Value = code;//0是编码，1是描述
                     row2.Cells["物料描述"].Value = name;//0是编码，1是描述
+                    break;
+            }
+        }
+
+
+        public void UpdataUIValue3(string controlname, string code, string name, string cl)
+        {
+            switch (controlname)
+            {
+                case "dataGridView1":
+                    int index = this.dataGridView1.CurrentRow.Index - 1;//由于按回车行索引会自动跳下下一行，所以取当前索引的上一行
+                    DataGridViewRow row2 = this.dataGridView1.Rows[index];
+                    this.dataGridView1.Rows[index].Cells[8].Selected = true;
+                    this.dataGridView1.Rows[index + 1].Cells[8].Selected = false;
+                    row2.Cells["物料编码"].Value = code;//0是编码，1是描述
+                    row2.Cells["物料描述"].Value = name;//0是编码，1是描述
+                    row2.Cells["材料"].Value = cl;
                     break;
             }
         }
