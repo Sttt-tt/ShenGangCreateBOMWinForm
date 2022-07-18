@@ -180,8 +180,6 @@ namespace WindowsApplication2
             //Form1.dataGridView4.DataSource = changedt_bom(dt);
 
             dataGridView1.DataSource = dt;
-            dtsg = dt;
-
             for (int iRow = 0; iRow < dataGridView1.Rows.Count; iRow++)
             {
                 string bitem = getstr(dataGridView1.Rows[iRow].Cells["母件料品"].Value);
@@ -1287,6 +1285,7 @@ namespace WindowsApplication2
         }
 
         DataTable dtzj = new DataTable();//上锅物料清单datatable
+        DataRow DataRowone;
         /// <summary>
         /// 自接物料清单导入
         /// 创建人：lvhe
@@ -1318,8 +1317,9 @@ namespace WindowsApplication2
             DataTable excelDt = excelHelper.ZjExcelToDataTable(1);
             //根据原始数据拼接DataGrid数据
             DataTable bomexcelDt = excelHelper.ZjExcelToBOMDataTable(excelDt);
-            dtzj = bomexcelDt;
+            //DataRowone = bomexcelDt.Rows[0];
             this.dataGridView1.DataSource = bomexcelDt;
+
             //this.dataGridView1.Columns["母件料品"].Visible = false;
             //this.dataGridView1.Columns["母件物料描述"].Visible = false;
             //this.dataGridView1.Columns["母件材料"].Visible = false;
@@ -1464,11 +1464,55 @@ namespace WindowsApplication2
 
             if (this.tabPage1.Text == "物料清单数据")
             {
-                SqlBulkCopyHelper.SqlBulkCopyByDatatable("cust_bomsg_data", dtsg);
+                DataTable dt = (dataGridView1.DataSource as DataTable);
+                SqlBulkCopyHelper.SqlBulkCopyByDatatable("cust_bomsg_data", dt);
             }
             if (this.tabPage1.Text == "自接物料清单数据")
             {
-                SqlBulkCopyHelper.SqlBulkCopyByDatatable("Cust_BomZj_Data", dtzj);
+                this.dataGridView1.Columns["是否虚拟"].Visible = true;
+                this.dataGridView1.Columns["是否末阶"].Visible = true;
+                this.dataGridView1.Columns["wbs"].Visible = true;
+                //隐藏1.2.3.4.5.6.7.8.9.10......
+                for (int i = 0; i < dataGridView1.RowCount; i++)
+                {
+                    if (Convert.ToString(dataGridView1.Rows[i].Cells["序号"].Value).IndexOf('-') == -1)
+                    {
+                        if (Convert.ToString(dataGridView1.Rows[i].Cells["序号"].Value).IndexOf('/') == -1)
+                        {
+                            CurrencyManager cm = (CurrencyManager)BindingContext[dataGridView1.DataSource];
+                            cm.SuspendBinding(); //挂起数据绑定
+                                                 //dataGridView1.ReadOnly = true; //继续，这行可选，如果你的datagridview是可编辑的就加上
+                            cm.ResumeBinding(); //继续数据绑定
+                            this.dataGridView1.Rows[i].Visible = true;
+                        }
+                    }
+
+                }
+                DataTable dtt = (dataGridView1.DataSource as DataTable);
+                //if (DataRowone != null)
+                //{
+                //    dtt.Rows.InsertAt(DataRowone, 0);
+                //}
+                SqlBulkCopyHelper.SqlBulkCopyByDatatable("Cust_BomZj_Data", dtt);
+                this.dataGridView1.Columns["是否虚拟"].Visible = false;
+                this.dataGridView1.Columns["是否末阶"].Visible = false;
+                this.dataGridView1.Columns["wbs"].Visible = false;
+                //隐藏1.2.3.4.5.6.7.8.9.10......
+                for (int i = 0; i < dataGridView1.RowCount; i++)
+                {
+                    if (Convert.ToString(dataGridView1.Rows[i].Cells["序号"].Value).IndexOf('-') == -1)
+                    {
+                        if (Convert.ToString(dataGridView1.Rows[i].Cells["序号"].Value).IndexOf('/') == -1)
+                        {
+                            CurrencyManager cm = (CurrencyManager)BindingContext[dataGridView1.DataSource];
+                            cm.SuspendBinding(); //挂起数据绑定
+                                                 //dataGridView1.ReadOnly = true; //继续，这行可选，如果你的datagridview是可编辑的就加上
+                            cm.ResumeBinding(); //继续数据绑定
+                            this.dataGridView1.Rows[i].Visible = false;
+                        }
+                    }
+
+                }
             }
         }
 
@@ -1505,8 +1549,8 @@ namespace WindowsApplication2
             }
             str = "select 序号,母件料品,母件物料描述,母件材料,母件基本计量单位,母件用量,物料编码,物料描述,基本计量单位,[数量/重量],材料,制造路线,是否末阶,是否虚拟,wbs,料品形态属性,备注 from Cust_BomZJ_Data where wbs='" + code + "'";
             DataSet ds = SqlHelper.ExecuteDataset(connectionString, CommandType.Text, str);
+            DataRowone = ds.Tables[0].Rows[0];
             this.dataGridView1.DataSource = ds.Tables[0];
-
             this.dataGridView1.Columns["是否虚拟"].Visible = false;
             this.dataGridView1.Columns["是否末阶"].Visible = false;
             this.dataGridView1.Columns["wbs"].Visible = false;
