@@ -1385,6 +1385,50 @@ namespace WindowsApplication2
                         msg("创建失败：" + rtnmsg);
                     }
                 }
+                else if (rtnmsg == "")
+                {
+                    int cgqty = 0, zzqty = 0, xnqty = 0, gyqty = 0;
+                    List<string> listcg = new List<string>();
+                    List<string> listZz = new List<string>();
+                    for (int iRow = 0; iRow < dataGridView1.Rows.Count; iRow++)
+                    {
+                        string attribute = getstr(dataGridView1.Rows[iRow].Cells["料品形态属性"].Value);
+                        if (attribute == "采购件")
+                        {
+                            if (!listcg.Contains(getstr(dataGridView1.Rows[iRow].Cells["物料编码"].Value)))
+                            {
+                                listcg.Add(getstr(dataGridView1.Rows[iRow].Cells["物料编码"].Value));
+                            }
+                            if (!listZz.Contains(getstr(dataGridView1.Rows[iRow].Cells["母件料品"].Value)))
+                            {
+                                listZz.Add(getstr(dataGridView1.Rows[iRow].Cells["母件料品"].Value));
+                            }
+                        }
+                        else if (attribute == "制造件")
+                        {
+                            if (!listZz.Contains(getstr(dataGridView1.Rows[iRow].Cells["母件料品"].Value)))
+                            {
+                                listZz.Add(getstr(dataGridView1.Rows[iRow].Cells["母件料品"].Value));
+                            }
+                            if (!listZz.Contains(getstr(dataGridView1.Rows[iRow].Cells["物料编码"].Value)))
+                            {
+                                listZz.Add(getstr(dataGridView1.Rows[iRow].Cells["物料编码"].Value));
+                            }
+                        }
+                        else if (attribute == "虚拟")
+                        {
+                            xnqty++;
+                        }
+                        else if (attribute == "工艺")
+                        {
+                            gyqty++;
+                        }
+                    }
+                    cgqty = listcg.Count;
+                    zzqty = listZz.Count;
+                    TD.Abort();
+                    msg("创建bom成功,共导入制造件" + zzqty + "件,采购件" + cgqty + "件,虚拟件" + xnqty + "件,工艺件" + gyqty + "件");
+                }
                 else
                 {
                     int cgqty = 0, zzqty = 0, xnqty = 0, gyqty = 0;
