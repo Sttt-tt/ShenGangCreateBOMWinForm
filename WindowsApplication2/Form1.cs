@@ -998,83 +998,7 @@ namespace WindowsApplication2
         /// <param name="e"></param>
         private void dataGridView1_CellEndEdit(object sender, DataGridViewCellEventArgs e)
         {
-            //自接修改物料清单
-            if (tabPage1.Text == "自接物料清单数据")
-            {
 
-                //是否是末级物料
-                string sfmj = dataGridView1[13, e.RowIndex].Value?.ToString();
-                if (sfmj != "是") return;
-
-                int index = e.ColumnIndex;
-                string value = dataGridView1[e.ColumnIndex, e.RowIndex].Value?.ToString();
-                //料品材质
-                string itemCz = dataGridView1[9, e.RowIndex].Value?.ToString();
-                //如果是物料描述列修改  则进入新的form2
-                if (e.ColumnIndex == 7)
-                {
-                    //Form3 form = new Form3(value, itemCz);
-                    //form.Show();
-
-                    controlname3 = ((DataGridView)sender).Name;
-                    Form3 f = new Form3(controlname3);
-                    f.Show();
-                    f.form3UserControls += UpdataUIValue3;
-                }
-            }
-            else
-            {
-                int index = e.ColumnIndex;
-                string value = dataGridView1[e.ColumnIndex, e.RowIndex].Value?.ToString();
-                string mjItemCode = dataGridView1[3, e.RowIndex].Value?.ToString();
-
-                //如果是物料描述列修改  则进入新的form2
-                if (e.ColumnIndex == 8)
-                {
-                    string[] temps = value.Split('_');
-                    //如果是3段  精确查找
-                    if (temps.Length >= 3)
-                    {
-                        string sql = string.Format(@"select '0000000000'+Code 料号,Name +'_'+DescFlexField_PrivateDescSeg1+'_'+SPECS 品名 from CBO_ItemMaster where DescFlexField_PrivateDescSeg1 = '{0}' 
-                                        and SPECS='{1}' group by Code,name,SPECS,DescFlexField_PrivateDescSeg1", temps[1], temps[2]);
-                        DataTable dt = MiddleDBInterface.getdt(sql, SQLHelper.sqlconn(Login.strConn));
-                        if (dt.Rows.Count == 1)
-                        {
-                            int index1 = this.dataGridView1.CurrentRow.Index - 1;//由于按回车行索引会自动跳下下一行，所以取当前索引的上一行
-                            DataGridViewRow row2 = this.dataGridView1.Rows[index1];
-                            this.dataGridView1.Rows[index1].Cells[8].Selected = true;
-                            this.dataGridView1.Rows[index1 + 1].Cells[8].Selected = false;
-                            row2.Cells["物料编码"].Value = dt.Rows[0]["料号"];//0是编码，1是描述
-                            row2.Cells["物料描述"].Value = dt.Rows[0]["品名"]; ;//0是编码，1是描述
-                        }
-                        else
-                        {
-                            controlname = ((DataGridView)sender).Name;
-                            Form2 f = new Form2(controlname);
-                            f.Show();
-                            f.form2UserControls += UpdataUIValue;
-                        }
-                    }
-                    else
-                    {
-                        controlname = ((DataGridView)sender).Name;
-                        Form2 f = new Form2(controlname);
-                        f.Show();
-                        f.form2UserControls += UpdataUIValue;
-                    }
-
-                }
-                else if (e.ColumnIndex == 15)
-                {
-                    for (int iRow = 0; iRow < dataGridView1.Rows.Count; iRow++)
-                    {
-                        if (mjItemCode == getstr(dataGridView1.Rows[iRow].Cells["母件料品"].Value))
-                        {
-                            dataGridView1.Rows[iRow].Cells["工艺路线"].Value = value;
-                        }
-                    }
-                }
-            }
 
 
         }
@@ -1763,6 +1687,87 @@ namespace WindowsApplication2
 
             }
             //initDataGrid(dataGridView1);
+        }
+
+        private void dataGridView1_CellMouseDoubleClick(object sender, DataGridViewCellMouseEventArgs e)
+        {
+            //自接修改物料清单
+            if (tabPage1.Text == "自接物料清单数据")
+            {
+
+                //是否是末级物料
+                string sfmj = dataGridView1[13, e.RowIndex].Value?.ToString();
+                if (sfmj != "是") return;
+
+                int index = e.ColumnIndex;
+                string value = dataGridView1[e.ColumnIndex, e.RowIndex].Value?.ToString();
+                //料品材质
+                string itemCz = dataGridView1[9, e.RowIndex].Value?.ToString();
+                //如果是物料描述列修改  则进入新的form2
+                if (e.ColumnIndex == 7)
+                {
+                    //Form3 form = new Form3(value, itemCz);
+                    //form.Show();
+
+                    controlname3 = ((DataGridView)sender).Name;
+                    Form3 f = new Form3(controlname3);
+                    f.Show();
+                    f.form3UserControls += UpdataUIValue3;
+                }
+            }
+            else
+            {
+                int index = e.ColumnIndex;
+                string value = dataGridView1[e.ColumnIndex, e.RowIndex].Value?.ToString();
+                string mjItemCode = dataGridView1[3, e.RowIndex].Value?.ToString();
+
+                //如果是物料描述列修改  则进入新的form2
+                if (e.ColumnIndex == 8)
+                {
+                    string[] temps = value.Split('_');
+                    //如果是3段  精确查找
+                    if (temps.Length >= 3)
+                    {
+                        string sql = string.Format(@"select '0000000000'+Code 料号,Name +'_'+DescFlexField_PrivateDescSeg1+'_'+SPECS 品名 from CBO_ItemMaster where DescFlexField_PrivateDescSeg1 = '{0}' 
+                                        and SPECS='{1}' group by Code,name,SPECS,DescFlexField_PrivateDescSeg1", temps[1], temps[2]);
+                        DataTable dt = MiddleDBInterface.getdt(sql, SQLHelper.sqlconn(Login.strConn));
+                        if (dt.Rows.Count == 1)
+                        {
+                            int index1 = this.dataGridView1.CurrentRow.Index - 1;//由于按回车行索引会自动跳下下一行，所以取当前索引的上一行
+                            DataGridViewRow row2 = this.dataGridView1.Rows[index1];
+                            this.dataGridView1.Rows[index1].Cells[8].Selected = true;
+                            this.dataGridView1.Rows[index1 + 1].Cells[8].Selected = false;
+                            row2.Cells["物料编码"].Value = dt.Rows[0]["料号"];//0是编码，1是描述
+                            row2.Cells["物料描述"].Value = dt.Rows[0]["品名"]; ;//0是编码，1是描述
+                        }
+                        else
+                        {
+                            controlname = ((DataGridView)sender).Name;
+                            Form2 f = new Form2(controlname);
+                            f.Show();
+                            f.form2UserControls += UpdataUIValue;
+                        }
+                    }
+                    else
+                    {
+                        controlname = ((DataGridView)sender).Name;
+                        Form2 f = new Form2(controlname);
+                        f.Show();
+                        f.form2UserControls += UpdataUIValue;
+                    }
+
+                }
+                else if (e.ColumnIndex == 15)
+                {
+                    for (int iRow = 0; iRow < dataGridView1.Rows.Count; iRow++)
+                    {
+                        if (mjItemCode == getstr(dataGridView1.Rows[iRow].Cells["母件料品"].Value))
+                        {
+                            dataGridView1.Rows[iRow].Cells["工艺路线"].Value = value;
+                        }
+                    }
+                }
+            }
         }
     }
 }

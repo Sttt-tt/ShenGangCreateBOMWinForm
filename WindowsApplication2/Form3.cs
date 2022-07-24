@@ -91,18 +91,23 @@ namespace WindowsApplication2
 
         private void toolStripButton10_Click(object sender, EventArgs e)
         {
-            if (string.IsNullOrEmpty(toolStripTextBox1.Text))
-            {
-                MessageBox.Show("请先输入物料规格");
-            }
 
-            if (string.IsNullOrEmpty(toolStripTextBox2.Text))
-            {
-                MessageBox.Show("请先输入物料材质");
-            }
-            string sql = string.Format(@"select Code 料号,Name+SPECS 品名,DescFlexField_PrivateDescSeg1 材料 from CBO_ItemMaster where DescFlexField_PrivateDescSeg1 = '{0}' 
-                                        and SPECS='{1}' group by Code,name,SPECS,DescFlexField_PrivateDescSeg1
-                                        ", toolStripTextBox2.Text, toolStripTextBox1.Text);
+            //if (string.IsNullOrEmpty(toolStripTextBox3.Text))
+            //{
+            //    MessageBox.Show("请先输入品名");
+            //}
+            //if (string.IsNullOrEmpty(toolStripTextBox1.Text))
+            //{
+            //    MessageBox.Show("请先输入物料规格");
+            //}
+
+            //if (string.IsNullOrEmpty(toolStripTextBox2.Text))
+            //{
+            //    MessageBox.Show("请先输入物料材质");
+            //}
+            string sql = string.Format(@"select Code 料号,Name+SPECS 品名,DescFlexField_PrivateDescSeg1 材料 from CBO_ItemMaster where Name like '%{0}%' and DescFlexField_PrivateDescSeg1 = '{1}' 
+                                        and SPECS='{2}' group by Code,name,SPECS,DescFlexField_PrivateDescSeg1
+                                        ", toolStripTextBox3.Text, toolStripTextBox2.Text, toolStripTextBox1.Text);
             DataTable dt = MiddleDBInterface.getdt(sql, SQLHelper.sqlconn(Login.strConn));
             this.dataGridView1.DataSource = dt;
         }
