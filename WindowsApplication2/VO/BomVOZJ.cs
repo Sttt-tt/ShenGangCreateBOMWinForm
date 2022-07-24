@@ -31,6 +31,8 @@ namespace WindowsApplication2.VO
         public decimal weight { get; set; }//单重
         public string private9 { get; set; }//私有字段9 备注
         public string formAttribute { get; set; }//料品形态
+        public string Bzth { get; set; }//标准图号
+        public string Yitemdesc { get; set; }//原子件描述
 
         public BomLineVOZJ(DataGridViewRow row)
         {
@@ -40,6 +42,8 @@ namespace WindowsApplication2.VO
             this.formAttribute = DataHelper.getStr(row.Cells["料品形态属性"].Value);//料品形态属性
             decimal parentQty = DataHelper.getDecimal(row.Cells["母件用量"].Value);//母件用量
             decimal useQty = DataHelper.getDecimal(row.Cells["数量/重量"].Value);//数量
+            this.Bzth = DataHelper.getStr(row.Cells["标准图号"].Value);//料品形态属性
+            this.Yitemdesc = DataHelper.getStr(row.Cells["原物料描述"].Value);//料品形态属性
 
             this.qty = Math.Round(useQty / parentQty, 4);//数量
             //this.qty = useQty;

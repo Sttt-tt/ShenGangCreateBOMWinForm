@@ -410,21 +410,13 @@ namespace WindowsApplication2
             //    //}
             //}
 
-            if (rtnmsg != "{\"d\":\"\"}")
-            {
-                if (rtnmsg.Contains("项目已存在"))
-                {
-                    return;
-                }
-                {
-                    msg("创建失败：" + rtnmsg);
-                }
-            }
-            else
+            if (rtnmsg == "")
             {
                 int cgqty = 0, zzqty = 0, xnqty = 0, gyqty = 0;
                 List<string> listcg = new List<string>();
                 List<string> listZz = new List<string>();
+                List<string> listxn = new List<string>();
+                List<string> listgy = new List<string>();
                 for (int iRow = 0; iRow < dataGridView1.Rows.Count; iRow++)
                 {
                     string attribute = getstr(dataGridView1.Rows[iRow].Cells["料品形态属性"].Value);
@@ -452,15 +444,103 @@ namespace WindowsApplication2
                     }
                     else if (attribute == "虚拟")
                     {
-                        xnqty++;
+                        if (!listxn.Contains(getstr(dataGridView1.Rows[iRow].Cells["物料编码"].Value)))
+                        {
+                            listxn.Add(getstr(dataGridView1.Rows[iRow].Cells["物料编码"].Value));
+                        }
+                        if (!listxn.Contains(getstr(dataGridView1.Rows[iRow].Cells["母件料品"].Value)))
+                        {
+                            listxn.Add(getstr(dataGridView1.Rows[iRow].Cells["母件料品"].Value));
+                        }
                     }
                     else if (attribute == "工艺")
                     {
-                        gyqty++;
+                        if (!listgy.Contains(getstr(dataGridView1.Rows[iRow].Cells["物料编码"].Value)))
+                        {
+                            listgy.Add(getstr(dataGridView1.Rows[iRow].Cells["物料编码"].Value));
+                        }
+                        if (!listgy.Contains(getstr(dataGridView1.Rows[iRow].Cells["母件料品"].Value)))
+                        {
+                            listgy.Add(getstr(dataGridView1.Rows[iRow].Cells["母件料品"].Value));
+                        }
                     }
                 }
                 cgqty = listcg.Count;
                 zzqty = listZz.Count;
+                xnqty = listxn.Count;
+                gyqty = listgy.Count;
+                msg("创建bom成功,共导入制造件" + zzqty + "件,采购件" + cgqty + "件,虚拟件" + xnqty + "件,工艺件" + gyqty + "件");
+            }
+
+            else if (rtnmsg != "{\"d\":\"\"}")
+            {
+                if (rtnmsg.Contains("项目已存在"))
+                {
+                    return;
+                }
+                {
+                    msg("创建失败：" + rtnmsg);
+                }
+            }
+            else
+            {
+                int cgqty = 0, zzqty = 0, xnqty = 0, gyqty = 0;
+                List<string> listcg = new List<string>();
+                List<string> listZz = new List<string>();
+                List<string> listxn = new List<string>();
+                List<string> listgy = new List<string>();
+                for (int iRow = 0; iRow < dataGridView1.Rows.Count; iRow++)
+                {
+                    string attribute = getstr(dataGridView1.Rows[iRow].Cells["料品形态属性"].Value);
+                    if (attribute == "采购件")
+                    {
+                        if (!listcg.Contains(getstr(dataGridView1.Rows[iRow].Cells["物料编码"].Value)))
+                        {
+                            listcg.Add(getstr(dataGridView1.Rows[iRow].Cells["物料编码"].Value));
+                        }
+                        if (!listZz.Contains(getstr(dataGridView1.Rows[iRow].Cells["母件料品"].Value)))
+                        {
+                            listZz.Add(getstr(dataGridView1.Rows[iRow].Cells["母件料品"].Value));
+                        }
+                    }
+                    else if (attribute == "制造件")
+                    {
+                        if (!listZz.Contains(getstr(dataGridView1.Rows[iRow].Cells["母件料品"].Value)))
+                        {
+                            listZz.Add(getstr(dataGridView1.Rows[iRow].Cells["母件料品"].Value));
+                        }
+                        if (!listZz.Contains(getstr(dataGridView1.Rows[iRow].Cells["物料编码"].Value)))
+                        {
+                            listZz.Add(getstr(dataGridView1.Rows[iRow].Cells["物料编码"].Value));
+                        }
+                    }
+                    else if (attribute == "虚拟")
+                    {
+                        if (!listxn.Contains(getstr(dataGridView1.Rows[iRow].Cells["物料编码"].Value)))
+                        {
+                            listxn.Add(getstr(dataGridView1.Rows[iRow].Cells["物料编码"].Value));
+                        }
+                        if (!listxn.Contains(getstr(dataGridView1.Rows[iRow].Cells["母件料品"].Value)))
+                        {
+                            listxn.Add(getstr(dataGridView1.Rows[iRow].Cells["母件料品"].Value));
+                        }
+                    }
+                    else if (attribute == "工艺")
+                    {
+                        if (!listgy.Contains(getstr(dataGridView1.Rows[iRow].Cells["物料编码"].Value)))
+                        {
+                            listgy.Add(getstr(dataGridView1.Rows[iRow].Cells["物料编码"].Value));
+                        }
+                        if (!listgy.Contains(getstr(dataGridView1.Rows[iRow].Cells["母件料品"].Value)))
+                        {
+                            listgy.Add(getstr(dataGridView1.Rows[iRow].Cells["母件料品"].Value));
+                        }
+                    }
+                }
+                cgqty = listcg.Count;
+                zzqty = listZz.Count;
+                xnqty = listxn.Count;
+                gyqty = listgy.Count;
                 msg("创建bom成功,共导入制造件" + zzqty + "件,采购件" + cgqty + "件,虚拟件" + xnqty + "件,工艺件" + gyqty + "件");
             }
             #region<<demo>>
@@ -1356,6 +1436,8 @@ namespace WindowsApplication2
             this.dataGridView1.Columns["是否虚拟"].Visible = false;
             this.dataGridView1.Columns["是否末阶"].Visible = false;
             this.dataGridView1.Columns["wbs"].Visible = false;
+            this.dataGridView1.Columns["标准图号"].Visible = false;
+            this.dataGridView1.Columns["原物料描述"].Visible = false;
 
             //隐藏1.2.3.4.5.6.7.8.9.10......
             for (int i = 0; i < dataGridView1.RowCount; i++)
@@ -1407,6 +1489,8 @@ namespace WindowsApplication2
                     int cgqty = 0, zzqty = 0, xnqty = 0, gyqty = 0;
                     List<string> listcg = new List<string>();
                     List<string> listZz = new List<string>();
+                    List<string> listxn = new List<string>();
+                    List<string> listgy = new List<string>();
                     for (int iRow = 0; iRow < dataGridView1.Rows.Count; iRow++)
                     {
                         string attribute = getstr(dataGridView1.Rows[iRow].Cells["料品形态属性"].Value);
@@ -1434,15 +1518,31 @@ namespace WindowsApplication2
                         }
                         else if (attribute == "虚拟")
                         {
-                            xnqty++;
+                            if (!listxn.Contains(getstr(dataGridView1.Rows[iRow].Cells["物料编码"].Value)))
+                            {
+                                listxn.Add(getstr(dataGridView1.Rows[iRow].Cells["物料编码"].Value));
+                            }
+                            if (!listxn.Contains(getstr(dataGridView1.Rows[iRow].Cells["母件料品"].Value)))
+                            {
+                                listxn.Add(getstr(dataGridView1.Rows[iRow].Cells["母件料品"].Value));
+                            }
                         }
                         else if (attribute == "工艺")
                         {
-                            gyqty++;
+                            if (!listgy.Contains(getstr(dataGridView1.Rows[iRow].Cells["物料编码"].Value)))
+                            {
+                                listgy.Add(getstr(dataGridView1.Rows[iRow].Cells["物料编码"].Value));
+                            }
+                            if (!listgy.Contains(getstr(dataGridView1.Rows[iRow].Cells["母件料品"].Value)))
+                            {
+                                listgy.Add(getstr(dataGridView1.Rows[iRow].Cells["母件料品"].Value));
+                            }
                         }
                     }
                     cgqty = listcg.Count;
                     zzqty = listZz.Count;
+                    xnqty = listxn.Count;
+                    gyqty = listgy.Count;
                     TD.Abort();
                     msg("创建bom成功,共导入制造件" + zzqty + "件,采购件" + cgqty + "件,虚拟件" + xnqty + "件,工艺件" + gyqty + "件");
                 }
@@ -1463,6 +1563,8 @@ namespace WindowsApplication2
                     int cgqty = 0, zzqty = 0, xnqty = 0, gyqty = 0;
                     List<string> listcg = new List<string>();
                     List<string> listZz = new List<string>();
+                    List<string> listxn = new List<string>();
+                    List<string> listgy = new List<string>();
                     for (int iRow = 0; iRow < dataGridView1.Rows.Count; iRow++)
                     {
                         string attribute = getstr(dataGridView1.Rows[iRow].Cells["料品形态属性"].Value);
@@ -1490,15 +1592,31 @@ namespace WindowsApplication2
                         }
                         else if (attribute == "虚拟")
                         {
-                            xnqty++;
+                            if (!listxn.Contains(getstr(dataGridView1.Rows[iRow].Cells["物料编码"].Value)))
+                            {
+                                listxn.Add(getstr(dataGridView1.Rows[iRow].Cells["物料编码"].Value));
+                            }
+                            if (!listxn.Contains(getstr(dataGridView1.Rows[iRow].Cells["母件料品"].Value)))
+                            {
+                                listxn.Add(getstr(dataGridView1.Rows[iRow].Cells["母件料品"].Value));
+                            }
                         }
                         else if (attribute == "工艺")
                         {
-                            gyqty++;
+                            if (!listgy.Contains(getstr(dataGridView1.Rows[iRow].Cells["物料编码"].Value)))
+                            {
+                                listgy.Add(getstr(dataGridView1.Rows[iRow].Cells["物料编码"].Value));
+                            }
+                            if (!listgy.Contains(getstr(dataGridView1.Rows[iRow].Cells["母件料品"].Value)))
+                            {
+                                listgy.Add(getstr(dataGridView1.Rows[iRow].Cells["母件料品"].Value));
+                            }
                         }
                     }
                     cgqty = listcg.Count;
                     zzqty = listZz.Count;
+                    xnqty = listxn.Count;
+                    gyqty = listgy.Count;
                     TD.Abort();
                     msg("创建bom成功,共导入制造件" + zzqty + "件,采购件" + cgqty + "件,虚拟件" + xnqty + "件,工艺件" + gyqty + "件");
                 }

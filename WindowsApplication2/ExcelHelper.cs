@@ -397,6 +397,9 @@ namespace WindowsApplication2
             //dt.Columns.Add("单重");
             //dt.Columns.Add("备  注");
             dt.Columns.Add("料品形态属性");
+            dt.Columns.Add("转换率");
+            dt.Columns.Add("标准图号");
+            dt.Columns.Add("原物料描述");
 
             IWorkbook workbook;//创建一个工作薄接口
             string fileExt = Path.GetExtension(fileName).ToLower();//获取文件的拓展名
@@ -488,16 +491,14 @@ namespace WindowsApplication2
                                 string[] beginningDrawNum = beginningDrawNums.Split(',');
                                 foreach (var item in beginningDrawNum)
                                 {
-                                    if (row.GetCell(j - 2).ToString() == "GB/T6170")
-                                    {
-
-                                    }
                                     if (row.GetCell(j - 2).ToString().StartsWith(item))
                                     {
                                         if (row.GetCell(j).ToString().Contains(","))
                                         {
                                             string[] str = row.GetCell(j).ToString().Split(',');
                                             dr["物料描述"] = row.GetCell(j - 2).ToString() + str[0].Trim();
+                                            dr["标准图号"] = row.GetCell(j - 2).ToString();
+                                            dr["原物料描述"] = str[0].Trim();
                                         }
                                         else
                                         {
@@ -505,10 +506,14 @@ namespace WindowsApplication2
                                             {
                                                 string[] str = row.GetCell(j).ToString().Split('L');
                                                 dr["物料描述"] = row.GetCell(j - 2).ToString() + str[0].Trim();
+                                                dr["标准图号"] = row.GetCell(j - 2).ToString();
+                                                dr["原物料描述"] = str[0].Trim();
                                             }
                                             else
                                             {
                                                 dr["物料描述"] = row.GetCell(j - 2).ToString() + row.GetCell(j).ToString();
+                                                dr["标准图号"] = row.GetCell(j - 2).ToString();
+                                                dr["原物料描述"] = row.GetCell(j).ToString();
                                             }
 
                                         }
@@ -619,6 +624,8 @@ namespace WindowsApplication2
             //dt.Columns.Add("备  注");
             dt.Columns.Add("料品形态属性");
             dt.Columns.Add("备注");
+            dt.Columns.Add("标准图号");
+            dt.Columns.Add("原物料描述");
             int i = 0;
             int count = 0;//记录maxcode是否是第一次
             string maxcode = string.Empty;
@@ -646,6 +653,8 @@ namespace WindowsApplication2
                         //dr["单重"] = row["单重"];
                         dr["料品形态属性"] = row["料品形态属性"];
                         dr["备注"] = row["备注"];
+                        dr["标准图号"] = row["标准图号"];
+                        dr["原物料描述"] = row["原物料描述"];
                         dr["wbs"] = itemCode;
                         dt.Rows.Add(dr);
 
@@ -682,6 +691,8 @@ namespace WindowsApplication2
                                 drr["是否虚拟"] = "是";
                                 drr["料品形态属性"] = "采购件";
                                 drr["备注"] = row["备注"];
+                                //drr["标准图号"] = row["标准图号"];
+                                //drr["原物料描述"] = row["原物料描述"];
                                 dt.Rows.Add(drr);
                             }
                             else
@@ -706,6 +717,8 @@ namespace WindowsApplication2
                                 drr["是否虚拟"] = "是";
                                 drr["料品形态属性"] = "采购件";
                                 drr["备注"] = row["备注"];
+                                drr["标准图号"] = row["标准图号"];
+                                drr["原物料描述"] = row["原物料描述"];
                                 dt.Rows.Add(drr);
                             }
                         }
@@ -736,6 +749,8 @@ namespace WindowsApplication2
                                 //dr["单重"] = row["单重"];
                                 dr["料品形态属性"] = row["料品形态属性"];
                                 dr["备注"] = row["备注"];
+                                dr["标准图号"] = row["标准图号"];
+                                dr["原物料描述"] = row["原物料描述"];
                                 dt.Rows.Add(dr);
                             }
                             if (GetLevelCount(Convert.ToString(row["序号"]), XhList))
@@ -772,6 +787,8 @@ namespace WindowsApplication2
                                     drr["是否虚拟"] = "是";
                                     drr["料品形态属性"] = "采购件";
                                     drr["备注"] = row["备注"];
+                                    //drr["标准图号"] = row["标准图号"];
+                                    //drr["原物料描述"] = row["原物料描述"];
                                     dt.Rows.Add(drr);
                                 }
                                 else
@@ -796,6 +813,8 @@ namespace WindowsApplication2
                                     drr["是否虚拟"] = "是";
                                     drr["料品形态属性"] = "采购件";
                                     drr["备注"] = row["备注"];
+                                    drr["标准图号"] = row["标准图号"];
+                                    drr["原物料描述"] = row["原物料描述"];
                                     dt.Rows.Add(drr);
                                 }
                             }
@@ -822,6 +841,8 @@ namespace WindowsApplication2
                                 dr["材料"] = row["材料"];
                                 dr["料品形态属性"] = row["料品形态属性"];
                                 dr["备注"] = row["备注"];
+                                dr["标准图号"] = row["标准图号"];
+                                dr["原物料描述"] = row["原物料描述"];
                                 dt.Rows.Add(dr);
 
                                 //判断1 - 1 / 1 - 1
@@ -857,8 +878,8 @@ namespace WindowsApplication2
                                         drr["材料"] = "";
                                         //drr["单重"] = "0";
                                         drr["是否虚拟"] = "是";
-                                        drr["料品形态属性"] = "采购件";
-                                        drr["备注"] = row["备注"];
+                                        //drr["料品形态属性"] = "采购件";
+                                        //drr["备注"] = row["备注"];
                                         dt.Rows.Add(drr);
                                     }
                                     else
@@ -883,6 +904,8 @@ namespace WindowsApplication2
                                         drr["是否虚拟"] = "是";
                                         drr["料品形态属性"] = "采购件";
                                         drr["备注"] = row["备注"];
+                                        drr["标准图号"] = row["标准图号"];
+                                        drr["原物料描述"] = row["原物料描述"];
                                         dt.Rows.Add(drr);
                                     }
                                 }
@@ -907,6 +930,8 @@ namespace WindowsApplication2
                                 //dr["单重"] = row["单重"];
                                 dr["料品形态属性"] = row["料品形态属性"];
                                 dr["备注"] = row["备注"];
+                                dr["标准图号"] = row["标准图号"];
+                                dr["原物料描述"] = row["原物料描述"];
                                 dt.Rows.Add(dr);
 
                                 //判断1 - 1 / 1 - 1
@@ -944,6 +969,8 @@ namespace WindowsApplication2
                                         drr["是否虚拟"] = "是";
                                         drr["料品形态属性"] = "采购件";
                                         drr["备注"] = row["备注"];
+                                        //drr["标准图号"] = row["标准图号"];
+                                        //drr["原物料描述"] = row["原物料描述"];
                                         dt.Rows.Add(drr);
                                     }
                                     else
@@ -968,6 +995,8 @@ namespace WindowsApplication2
                                         drr["是否虚拟"] = "是";
                                         drr["料品形态属性"] = "采购件";
                                         drr["备注"] = row["备注"];
+                                        drr["标准图号"] = row["标准图号"];
+                                        drr["原物料描述"] = row["原物料描述"];
                                         dt.Rows.Add(drr);
                                     }
                                 }
@@ -1010,9 +1039,9 @@ namespace WindowsApplication2
             string ItemSPECS = Regex.Replace(item, "[\u4e00-\u9fa5]", "", RegexOptions.IgnoreCase); //物料规格型号
             DataTable dt = new DataTable();
             string sql = string.Empty;
-            sql = string.Format(@"select top 1 Code 料号,Name+SPECS 品名,DescFlexField_PrivateDescSeg1 材料 from CBO_ItemMaster where Name like'{0}' and DescFlexField_PrivateDescSeg1 like '{1}' 
-                                        and SPECS like'{2}'
-                                        ", ItemName, itemCz, ItemSPECS);
+            sql = string.Format(@"select top 1 Code 料号,Name+SPECS 品名,DescFlexField_PrivateDescSeg1 材料 from CBO_ItemMaster where DescFlexField_PrivateDescSeg1 = '{0}' 
+                                        and SPECS ='{1}'
+                                        ", itemCz, ItemSPECS);
             dt = MiddleDBInterface.getdt(sql, SQLHelper.sqlconn(Login.strConn));
             return dt;
         }
