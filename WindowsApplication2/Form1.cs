@@ -773,7 +773,8 @@ namespace WindowsApplication2
             client.Timeout = -1;
             var request = new RestRequest(Method.POST);
             request.AddHeader("Content-Type", "application/json");
-            str = "" + str.Replace("\"", "\\\"") + "";
+            //str = "" + str.Replace("\"", "\\\"") + "";
+            str = ReplaceString(str);
             string EntCode = getstr(Login.u9ContentHt["OrgCode"]);//上下文组织编码
             string UserCode = getstr(Login.u9ContentHt["UserCode"]);//上下文用户编码
             string body = "{\"context\":{\"CultureName\":\"zh-CN\",\"EntCode\":\"01\",\"OrgCode\":\"" + EntCode + "\",\"UserCode\":\"" + UserCode + "\"},\"args\":\"" + str + "\",\"action\":\"ZJCreateBom\"}";
@@ -785,6 +786,33 @@ namespace WindowsApplication2
         }
         #endregion
 
+
+
+        /// <summary>
+        ///   替换部分字符串
+        /// </summary>
+        /// <param name="sPassed">需要替换的字符串</param>
+        /// <returns></returns>
+        public static string ReplaceString(string JsonString)
+        {
+            if (JsonString == null) { return JsonString; }
+            if (JsonString.Contains("\\"))
+            {
+                JsonString = JsonString.Replace("\\", "\\\\");
+            }
+            if (JsonString.Contains("\'"))
+            {
+                JsonString = JsonString.Replace("\'", "\\\'");
+            }
+            if (JsonString.Contains("\""))
+            {
+                JsonString = JsonString.Replace("\"", "\\\"");
+            }
+            //去掉字符串的回车换行符
+            JsonString = Regex.Replace(JsonString, @"[\n\r]", "");
+            JsonString = JsonString.Trim();
+            return JsonString;
+        }
         #region <<comboBox1事件集合>>
         private void comboBox1_DrawItem(object sender, DrawItemEventArgs e)
         {
@@ -1374,18 +1402,7 @@ namespace WindowsApplication2
                 string rtnmsg = "";
                 rtnmsg = ZJPostCreatBom(strJson);
 
-                if (rtnmsg != "{\"d\":\"\"}")
-                {
-                    if (rtnmsg.Contains("项目已存在"))
-                    {
-                        return;
-                    }
-                    {
-                        TD.Abort();
-                        msg("创建失败：" + rtnmsg);
-                    }
-                }
-                else if (rtnmsg == "")
+                if (rtnmsg == "")
                 {
                     int cgqty = 0, zzqty = 0, xnqty = 0, gyqty = 0;
                     List<string> listcg = new List<string>();
@@ -1428,6 +1445,18 @@ namespace WindowsApplication2
                     zzqty = listZz.Count;
                     TD.Abort();
                     msg("创建bom成功,共导入制造件" + zzqty + "件,采购件" + cgqty + "件,虚拟件" + xnqty + "件,工艺件" + gyqty + "件");
+                }
+
+                else if (!string.IsNullOrEmpty(rtnmsg) && rtnmsg != "{\"d\":\"\"}")
+                {
+                    if (rtnmsg.Contains("项目已存在"))
+                    {
+                        return;
+                    }
+                    {
+                        TD.Abort();
+                        msg("创建失败：" + rtnmsg);
+                    }
                 }
                 else
                 {

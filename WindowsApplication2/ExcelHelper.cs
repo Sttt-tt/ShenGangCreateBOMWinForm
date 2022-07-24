@@ -4,6 +4,7 @@ using NPOI.SS.UserModel;
 using NPOI.XSSF.UserModel;
 using System;
 using System.Collections.Generic;
+using System.Configuration;
 using System.Data;
 using System.IO;
 using System.Linq;
@@ -20,6 +21,8 @@ namespace WindowsApplication2
         private IWorkbook workbook = null;
         private FileStream fs = null;
         private bool disposed;
+
+        public string beginningDrawNums = ConfigurationManager.AppSettings["BeginningDrawNums"];
 
         public ExcelHelper(string fileName)
         {
@@ -482,23 +485,56 @@ namespace WindowsApplication2
                             }
                             if (j == 10)
                             {
-                                if (row.GetCell(j).ToString().Contains(","))
+                                string[] beginningDrawNum = beginningDrawNums.Split(',');
+                                foreach (var item in beginningDrawNum)
                                 {
-                                    string[] str = row.GetCell(j).ToString().Split(',');
-                                    dr["物料描述"] = str[0].Trim();
-                                }
-                                else
-                                {
-                                    if (row.GetCell(j).ToString().Contains("L"))
+                                    if (row.GetCell(j - 2).ToString() == "GB/T6170")
                                     {
-                                        string[] str = row.GetCell(j).ToString().Split('L');
-                                        dr["物料描述"] = str[0].Trim();
+
+                                    }
+                                    if (row.GetCell(j - 2).ToString().StartsWith(item))
+                                    {
+                                        if (row.GetCell(j).ToString().Contains(","))
+                                        {
+                                            string[] str = row.GetCell(j).ToString().Split(',');
+                                            dr["物料描述"] = row.GetCell(j - 2).ToString() + str[0].Trim();
+                                        }
+                                        else
+                                        {
+                                            if (row.GetCell(j).ToString().Contains("L"))
+                                            {
+                                                string[] str = row.GetCell(j).ToString().Split('L');
+                                                dr["物料描述"] = row.GetCell(j - 2).ToString() + str[0].Trim();
+                                            }
+                                            else
+                                            {
+                                                dr["物料描述"] = row.GetCell(j - 2).ToString() + row.GetCell(j).ToString();
+                                            }
+
+                                        }
+                                        break;
                                     }
                                     else
                                     {
-                                        dr["物料描述"] = row.GetCell(j).ToString();
-                                    }
+                                        if (row.GetCell(j).ToString().Contains(","))
+                                        {
+                                            string[] str = row.GetCell(j).ToString().Split(',');
+                                            dr["物料描述"] = str[0].Trim();
+                                        }
+                                        else
+                                        {
+                                            if (row.GetCell(j).ToString().Contains("L"))
+                                            {
+                                                string[] str = row.GetCell(j).ToString().Split('L');
+                                                dr["物料描述"] = str[0].Trim();
+                                            }
+                                            else
+                                            {
+                                                dr["物料描述"] = row.GetCell(j).ToString();
+                                            }
 
+                                        }
+                                    }
                                 }
                             }
                             if (j == 12)
