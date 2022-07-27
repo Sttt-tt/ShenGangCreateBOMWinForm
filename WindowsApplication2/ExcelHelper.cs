@@ -397,7 +397,7 @@ namespace WindowsApplication2
             //dt.Columns.Add("单重");
             //dt.Columns.Add("备  注");
             dt.Columns.Add("料品形态属性");
-            dt.Columns.Add("转换率");
+            //dt.Columns.Add("转换率");
             dt.Columns.Add("标准图号");
             dt.Columns.Add("原物料描述");
 
@@ -649,7 +649,7 @@ namespace WindowsApplication2
             //dt.Columns.Add("备  注");
             dt.Columns.Add("料品形态属性");
             dt.Columns.Add("备注");
-            dt.Columns.Add("转换率");
+            //dt.Columns.Add("转换率");
             dt.Columns.Add("标准图号");
             dt.Columns.Add("原物料描述");
             int i = 0;
@@ -679,7 +679,7 @@ namespace WindowsApplication2
                         //dr["单重"] = row["单重"];
                         dr["料品形态属性"] = row["料品形态属性"];
                         dr["备注"] = row["备注"];
-                        dr["转换率"] = row["转换率"];
+                        //dr["转换率"] = row["转换率"];
                         dr["标准图号"] = row["标准图号"];
                         dr["原物料描述"] = row["原物料描述"];
                         dr["wbs"] = itemCode;
@@ -688,7 +688,8 @@ namespace WindowsApplication2
                         if (GetLevel1Count(Convert.ToString(row["序号"]), XhList))
                         {
                             dr["是否末阶"] = "是";
-                            if (JudgeDs(getItemMasters(Convert.ToString(row["物料描述"]), Convert.ToString(row["材料"]))))
+
+                            if (getItemMastersCount(Convert.ToString(row["物料描述"]), Convert.ToString(row["材料"])) == 0 || getItemMastersCount(Convert.ToString(row["物料描述"]), Convert.ToString(row["材料"])) > 1)
                             {
                                 count++;
                                 if (count == 1)
@@ -718,7 +719,7 @@ namespace WindowsApplication2
                                 drr["是否虚拟"] = "是";
                                 drr["料品形态属性"] = "采购件";
                                 drr["备注"] = row["备注"];
-                                drr["转换率"] = row["转换率"];
+                                //drr["转换率"] = row["转换率"];
                                 //drr["标准图号"] = row["标准图号"];
                                 //drr["原物料描述"] = row["原物料描述"];
                                 dt.Rows.Add(drr);
@@ -745,7 +746,7 @@ namespace WindowsApplication2
                                 drr["是否虚拟"] = "是";
                                 drr["料品形态属性"] = "采购件";
                                 drr["备注"] = row["备注"];
-                                drr["转换率"] = row["转换率"];
+                                //drr["转换率"] = row["转换率"];
                                 drr["标准图号"] = row["标准图号"];
                                 drr["原物料描述"] = row["原物料描述"];
                                 dt.Rows.Add(drr);
@@ -778,7 +779,7 @@ namespace WindowsApplication2
                                 //dr["单重"] = row["单重"];
                                 dr["料品形态属性"] = row["料品形态属性"];
                                 dr["备注"] = row["备注"];
-                                dr["转换率"] = row["转换率"];
+                                //dr["转换率"] = row["转换率"];
                                 dr["标准图号"] = row["标准图号"];
                                 dr["原物料描述"] = row["原物料描述"];
                                 dt.Rows.Add(dr);
@@ -786,7 +787,8 @@ namespace WindowsApplication2
                             if (GetLevelCount(Convert.ToString(row["序号"]), XhList))
                             {
                                 dr["是否末阶"] = "是";
-                                if (JudgeDs(getItemMasters(Convert.ToString(row["物料描述"]), Convert.ToString(row["材料"]))))
+
+                                if (getItemMastersCount(Convert.ToString(row["物料描述"]), Convert.ToString(row["材料"])) == 0 || getItemMastersCount(Convert.ToString(row["物料描述"]), Convert.ToString(row["材料"])) > 1)
                                 {
                                     count++;
                                     if (count == 1)
@@ -817,7 +819,7 @@ namespace WindowsApplication2
                                     drr["是否虚拟"] = "是";
                                     drr["料品形态属性"] = "采购件";
                                     drr["备注"] = row["备注"];
-                                    drr["转换率"] = row["转换率"];
+                                    //drr["转换率"] = row["转换率"];
                                     //drr["标准图号"] = row["标准图号"];
                                     //drr["原物料描述"] = row["原物料描述"];
                                     dt.Rows.Add(drr);
@@ -844,7 +846,7 @@ namespace WindowsApplication2
                                     drr["是否虚拟"] = "是";
                                     drr["料品形态属性"] = "采购件";
                                     drr["备注"] = row["备注"];
-                                    drr["转换率"] = row["转换率"];
+                                    //drr["转换率"] = row["转换率"];
                                     drr["标准图号"] = row["标准图号"];
                                     drr["原物料描述"] = row["原物料描述"];
                                     dt.Rows.Add(drr);
@@ -873,7 +875,7 @@ namespace WindowsApplication2
                                 dr["材料"] = row["材料"];
                                 dr["料品形态属性"] = row["料品形态属性"];
                                 dr["备注"] = row["备注"];
-                                dr["转换率"] = row["转换率"];
+                                //dr["转换率"] = row["转换率"];
                                 dr["标准图号"] = row["标准图号"];
                                 dr["原物料描述"] = row["原物料描述"];
                                 dt.Rows.Add(dr);
@@ -882,7 +884,7 @@ namespace WindowsApplication2
                                 if (GetLevelCount2(Convert.ToString(row["序号"]), XhList))
                                 {
                                     dr["是否末阶"] = "是";
-                                    if (JudgeDs(getItemMasters(Convert.ToString(row["物料描述"]), Convert.ToString(row["材料"]))))
+                                    if (getItemMastersCount(Convert.ToString(row["物料描述"]), Convert.ToString(row["材料"])) == 0 || getItemMastersCount(Convert.ToString(row["物料描述"]), Convert.ToString(row["材料"])) > 1)
                                     {
                                         count++;
                                         if (count == 1)
@@ -911,8 +913,8 @@ namespace WindowsApplication2
                                         drr["材料"] = "";
                                         //drr["单重"] = "0";
                                         drr["是否虚拟"] = "是";
-                                        drr["转换率"] = row["转换率"];
-                                        //drr["料品形态属性"] = "采购件";
+                                        //drr["转换率"] = row["转换率"];
+                                        drr["料品形态属性"] = "采购件";
                                         //drr["备注"] = row["备注"];
                                         dt.Rows.Add(drr);
                                     }
@@ -938,7 +940,7 @@ namespace WindowsApplication2
                                         drr["是否虚拟"] = "是";
                                         drr["料品形态属性"] = "采购件";
                                         drr["备注"] = row["备注"];
-                                        drr["转换率"] = row["转换率"];
+                                        //drr["转换率"] = row["转换率"];
                                         drr["标准图号"] = row["标准图号"];
                                         drr["原物料描述"] = row["原物料描述"];
                                         dt.Rows.Add(drr);
@@ -965,7 +967,7 @@ namespace WindowsApplication2
                                 //dr["单重"] = row["单重"];
                                 dr["料品形态属性"] = row["料品形态属性"];
                                 dr["备注"] = row["备注"];
-                                dr["转换率"] = row["转换率"];
+                                //dr["转换率"] = row["转换率"];
                                 dr["标准图号"] = row["标准图号"];
                                 dr["原物料描述"] = row["原物料描述"];
                                 dt.Rows.Add(dr);
@@ -974,7 +976,8 @@ namespace WindowsApplication2
                                 if (GetLevelCount2(Convert.ToString(row["序号"]), XhList))
                                 {
                                     dr["是否末阶"] = "是";
-                                    if (JudgeDs(getItemMasters(Convert.ToString(row["物料描述"]), Convert.ToString(row["材料"]))))
+
+                                    if (getItemMastersCount(Convert.ToString(row["物料描述"]), Convert.ToString(row["材料"])) == 0 || getItemMastersCount(Convert.ToString(row["物料描述"]), Convert.ToString(row["材料"])) > 1)
                                     {
                                         count++;
                                         if (count == 1)
@@ -1031,7 +1034,7 @@ namespace WindowsApplication2
                                         drr["是否虚拟"] = "是";
                                         drr["料品形态属性"] = "采购件";
                                         drr["备注"] = row["备注"];
-                                        drr["转换率"] = row["转换率"];
+                                        //drr["转换率"] = row["转换率"];
                                         drr["标准图号"] = row["标准图号"];
                                         drr["原物料描述"] = row["原物料描述"];
                                         dt.Rows.Add(drr);
@@ -1076,11 +1079,27 @@ namespace WindowsApplication2
             string ItemSPECS = Regex.Replace(item, "[\u4e00-\u9fa5]", "", RegexOptions.IgnoreCase); //物料规格型号
             DataTable dt = new DataTable();
             string sql = string.Empty;
-            sql = string.Format(@"select top 1 Code 料号,Name+SPECS 品名,DescFlexField_PrivateDescSeg1 材料 from CBO_ItemMaster where DescFlexField_PrivateDescSeg1 = '{0}' 
-                                        and SPECS ='{1}'
-                                        ", itemCz, ItemSPECS);
+            sql = string.Format(@"select top 1 Code 料号,Name+SPECS 品名,DescFlexField_PrivateDescSeg1 材料 from CBO_ItemMaster where Name='{0}' and DescFlexField_PrivateDescSeg1 = '{1}' 
+                                        and SPECS ='{2}'
+                                        ", ItemName, itemCz, ItemSPECS);
             dt = MiddleDBInterface.getdt(sql, SQLHelper.sqlconn(Login.strConn));
             return dt;
+        }
+
+
+        private int getItemMastersCount(string item, string itemCz)
+        {
+            int count = 0;
+            string ItemName = string.IsNullOrEmpty(KeepChinese(item)) ? Regex.Replace(item, "[\u4e00-\u9fa5]", "", RegexOptions.IgnoreCase) : KeepChinese(item);//物料名称
+            string ItemSPECS = Regex.Replace(item, "[\u4e00-\u9fa5]", "", RegexOptions.IgnoreCase); //物料规格型号
+            DataTable dt = new DataTable();
+            string sql = string.Empty;
+            sql = string.Format(@"select count(*) count from CBO_ItemMaster where Name='{0}' and DescFlexField_PrivateDescSeg1 = '{0}' 
+                                        and SPECS ='{1}'
+                                        ", ItemName, itemCz, ItemSPECS);
+            dt = MiddleDBInterface.getdt(sql, SQLHelper.sqlconn(Login.strConn));
+            count = Convert.ToInt32(dt.Rows[0]["count"]);
+            return count;
         }
 
 

@@ -179,6 +179,7 @@
     <Compile Include="VO\BomKey.cs" />
     <Compile Include="VO\BomVO.cs" />
     <Compile Include="VO\BomVOZJ.cs" />
+    <Compile Include="VO\ResultModelForZJ.cs" />
     <Compile Include="VO\ResultVO.cs" />
     <EmbeddedResource Include="Form1.resx">
       <SubType>Designer</SubType>

@@ -1044,18 +1044,31 @@ namespace WindowsApplication2
         }
 
 
-        public void UpdataUIValue3(string controlname, string code, string name, string cl)
+        public void UpdataUIValue3(string controlname, string code, string name, string cl, string unit)
         {
             switch (controlname)
             {
                 case "dataGridView1":
-                    int index = this.dataGridView1.CurrentRow.Index - 1;//由于按回车行索引会自动跳下下一行，所以取当前索引的上一行
+                    int index = this.dataGridView1.CurrentRow.Index;//由于按回车行索引会自动跳下下一行，所以取当前索引的上一行
                     DataGridViewRow row2 = this.dataGridView1.Rows[index];
                     this.dataGridView1.Rows[index].Cells[8].Selected = true;
-                    this.dataGridView1.Rows[index + 1].Cells[8].Selected = false;
+                    //this.dataGridView1.Rows[index + 1].Cells[8].Selected = false;
                     row2.Cells["物料编码"].Value = code;//0是编码，1是描述
                     row2.Cells["物料描述"].Value = name;//0是编码，1是描述
                     row2.Cells["材料"].Value = cl;
+                    if (unit == "W013")
+                    {
+                        unit = "KG";
+                    }
+                    else if (unit == "PCS")
+                    {
+                        unit = "EA";
+                    }
+                    else if (unit == "L007")
+                    {
+                        unit = "M";
+                    }
+                    row2.Cells["基本计量单位"].Value = unit;
                     break;
             }
         }
@@ -1388,6 +1401,17 @@ namespace WindowsApplication2
                 MessageBox.Show("导入数据无效");
                 return;
             }
+            if (true)
+            {
+                for (int iRow = 0; iRow < dataGridView1.Rows.Count; iRow++)
+                {
+                    if (string.IsNullOrEmpty(getstr(dataGridView1.Rows[iRow].Cells["物料编码"].Value)))
+                    {
+                        MessageBox.Show("请先确认所有物料编码不为空!");
+                        return;
+                    }
+                }
+            }
             Thread TD = new Thread(ShowProgressForm);
             TD.Start();
 
@@ -1701,8 +1725,8 @@ namespace WindowsApplication2
 
                 int index = e.ColumnIndex;
                 string value = dataGridView1[e.ColumnIndex, e.RowIndex].Value?.ToString();
-                //料品材质
-                string itemCz = dataGridView1[9, e.RowIndex].Value?.ToString();
+                //单位
+                string itemUnit = dataGridView1[4, e.RowIndex].Value?.ToString();
                 //如果是物料描述列修改  则进入新的form2
                 if (e.ColumnIndex == 7)
                 {
@@ -1710,7 +1734,7 @@ namespace WindowsApplication2
                     //form.Show();
 
                     controlname3 = ((DataGridView)sender).Name;
-                    Form3 f = new Form3(controlname3);
+                    Form3 f = new Form3(controlname3, itemUnit);
                     f.Show();
                     f.form3UserControls += UpdataUIValue3;
                 }
