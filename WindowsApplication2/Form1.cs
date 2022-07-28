@@ -1393,8 +1393,8 @@ namespace WindowsApplication2
             this.dataGridView1.Columns["是否虚拟"].Visible = false;
             this.dataGridView1.Columns["是否末阶"].Visible = false;
             this.dataGridView1.Columns["wbs"].Visible = false;
-            //this.dataGridView1.Columns["标准图号"].Visible = false;
-            //this.dataGridView1.Columns["原物料描述"].Visible = false;
+            this.dataGridView1.Columns["标准图号"].Visible = false;
+            this.dataGridView1.Columns["原物料描述"].Visible = false;
 
             //隐藏1.2.3.4.5.6.7.8.9.10......
             for (int i = 0; i < dataGridView1.RowCount; i++)
