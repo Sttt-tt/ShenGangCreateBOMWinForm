@@ -14,8 +14,10 @@ using WindowsApplication2.VO;
 
 namespace WindowsApplication2
 {
+
     public partial class Form3 : Form
     {
+        public static string EntID = getstr(Login.u9ContentHt["OrgID"]);//登陆组织ID
         public delegate void form3UserControlValue(string controlname, string code, string name, string cl, string unit);
         public form3UserControlValue form3UserControls;
         private string form1contorlname3 = "";
@@ -122,7 +124,7 @@ namespace WindowsApplication2
             left join CBO_Category A1 on A.MainItemCategory=A1.ID
             left join CBO_Category_Trl A2 on A1.ID=A2.ID
             left join Base_UOM A3  ON A3.ID=A.InventoryUOM
-            where 1=1 ");
+            where 1=1 and A.Org=" + EntID + " ");
 
             if (!string.IsNullOrEmpty(toolStripTextBox3.Text))
             {
@@ -175,82 +177,97 @@ namespace WindowsApplication2
                 string specs = toolStripTextBox1.Text.Trim();//规格
                 string cz = toolStripTextBox2.Text.Trim();//材质
                 decimal zhl = 0;//转换率
-                //if (itemcode == "钢管" && specs.Contains("φ"))
-                //{
-                //    string[] s = specs.Trim().Split('φ');
-                //    string[] s1 = s[1].Split('*');
-                //    if (s1.Count() == 2)
-                //    {
-                //        zhl = Convert.ToDecimal(0.0246615) * (Convert.ToDecimal(s1[0]) - Convert.ToDecimal(s1[1])) * Convert.ToDecimal(s1[1]);
-                //    }
-                //}
-                //if (itemcode == "扁钢" && specs.Contains("*"))
-                //{
-                //    specs = specs.Replace("t", "");
-                //    string[] s = specs.Split('*');
-                //    zhl = Convert.ToDecimal(s[0]) * Convert.ToDecimal(s[1]) * Convert.ToDecimal(7.85) * Convert.ToDecimal(0.001);
-                //}
-                if (!string.IsNullOrEmpty(toolStripTextBox4.Text))
+                //首先判断料品对应的主分类是否唯一
+                string mainItemCategoryCode = string.Empty;
+                int count = itemMainItemCategoryCount(itemcode, ref mainItemCategoryCode);
+
+                if (count == 0)
                 {
-                    zhl = Convert.ToDecimal(toolStripTextBox4.Text);
+                    MessageBox.Show("系统中不存在品名" + itemcode + "对应的主分类");
                 }
-                ItemInfo itemInfo = new ItemInfo();
-                itemInfo.ItemName = itemcode;
-                itemInfo.Specs = specs;
-                itemInfo.CaiZ = cz;
-                itemInfo.Zhl = zhl.ToString();
-                itemInfo.Unit = unit;
-                string strJson = Newtonsoft.Json.JsonConvert.SerializeObject(itemInfo);
-                if (zhl > 0)
+                else if (count == 1)
                 {
-                    string msg = ZJPostCreatItemByZhl(strJson);
-                    msg = msg.Substring(7);
-                    msg = msg.Remove(msg.Length - 3, 3);
-                    msg = msg.Replace(@"\", string.Empty);
-                    ResultModelForZJ resultModelForZJ = JsonConvert.DeserializeObject<ResultModelForZJ>(msg);
-                    if (resultModelForZJ.Msg == "fail")
+                    //if (itemcode == "钢管" && specs.Contains("φ"))
+                    //{
+                    //    string[] s = specs.Trim().Split('φ');
+                    //    string[] s1 = s[1].Split('*');
+                    //    if (s1.Count() == 2)
+                    //    {
+                    //        zhl = Convert.ToDecimal(0.0246615) * (Convert.ToDecimal(s1[0]) - Convert.ToDecimal(s1[1])) * Convert.ToDecimal(s1[1]);
+                    //    }
+                    //}
+                    //if (itemcode == "扁钢" && specs.Contains("*"))
+                    //{
+                    //    specs = specs.Replace("t", "");
+                    //    string[] s = specs.Split('*');
+                    //    zhl = Convert.ToDecimal(s[0]) * Convert.ToDecimal(s[1]) * Convert.ToDecimal(7.85) * Convert.ToDecimal(0.001);
+                    //}
+                    if (!string.IsNullOrEmpty(toolStripTextBox4.Text))
                     {
-                        MessageBox.Show(resultModelForZJ.Error);
+                        zhl = Convert.ToDecimal(toolStripTextBox4.Text);
+                    }
+                    ItemInfo itemInfo = new ItemInfo();
+                    itemInfo.ItemName = itemcode;
+                    itemInfo.Specs = specs;
+                    itemInfo.CaiZ = cz;
+                    itemInfo.Zhl = zhl.ToString();
+                    itemInfo.Unit = unit;
+                    itemInfo.MainItemCategoryCode = mainItemCategoryCode;
+                    string strJson = Newtonsoft.Json.JsonConvert.SerializeObject(itemInfo);
+                    if (zhl > 0)
+                    {
+                        string msg = ZJPostCreatItemByZhl(strJson);
+                        msg = msg.Substring(7);
+                        msg = msg.Remove(msg.Length - 3, 3);
+                        msg = msg.Replace(@"\", string.Empty);
+                        ResultModelForZJ resultModelForZJ = JsonConvert.DeserializeObject<ResultModelForZJ>(msg);
+                        if (resultModelForZJ.Msg == "fail")
+                        {
+                            MessageBox.Show(resultModelForZJ.Error);
+                        }
+                        else
+                        {
+                            string itemid = resultModelForZJ.ItemCode;
+                            string sql = string.Format(@"select A.Code 料号,A.Name+A.SPECS 品名,A.DescFlexField_PrivateDescSeg1 材质,A1.Code 单位
+                        from CBO_ItemMaster A
+						left join Base_UOM  A1 on A.InventoryUOM=A1.ID
+						where A.ID={0} and A.Org={1}", itemid, EntID);
+                            DataTable dt = MiddleDBInterface.getdt(sql, SQLHelper.sqlconn(Login.strConn));
+                            //this.dataGridView1.DataSource = dt;
+                            form3UserControls(form1contorlname3, Convert.ToString(dt.Rows[0]["料号"]), Convert.ToString(dt.Rows[0]["品名"]), Convert.ToString(dt.Rows[0]["材质"]), Convert.ToString(dt.Rows[0]["单位"]));
+                            this.Close();
+                        }
                     }
                     else
                     {
-                        string itemid = resultModelForZJ.ItemCode;
-                        string sql = string.Format(@"select A.Code 料号,A.Name+A.SPECS 品名,A.DescFlexField_PrivateDescSeg1 材质,A1.Code 单位
+                        string msg = ZJPostCreatItem(strJson);
+                        //{"d":"[{\"Error\":\"主分类名称不等边角钢不存在\",\"Result\":0,\"Method\":null,\"Msg\":\"fail\",\"ItemCode\":\"\"}]"}
+                        msg = msg.Substring(7);
+                        msg = msg.Remove(msg.Length - 3, 3);
+                        msg = msg.Replace(@"\", string.Empty);
+                        ResultModelForZJ resultModelForZJ = JsonConvert.DeserializeObject<ResultModelForZJ>(msg);
+                        if (resultModelForZJ.Msg == "fail")
+                        {
+                            MessageBox.Show(resultModelForZJ.Error);
+                        }
+                        else
+                        {
+                            string itemid = resultModelForZJ.ItemCode;
+                            string sql = string.Format(@"select A.Code 料号,A.Name+A.SPECS 品名,A.DescFlexField_PrivateDescSeg1 材质,A1.Code 单位
                         from CBO_ItemMaster A
 						left join Base_UOM  A1 on A.InventoryUOM=A1.ID
-						where A.ID={0}", itemid);
-                        DataTable dt = MiddleDBInterface.getdt(sql, SQLHelper.sqlconn(Login.strConn));
-                        //this.dataGridView1.DataSource = dt;
-                        form3UserControls(form1contorlname3, Convert.ToString(dt.Rows[0]["料号"]), Convert.ToString(dt.Rows[0]["品名"]), Convert.ToString(dt.Rows[0]["材质"]), Convert.ToString(dt.Rows[0]["单位"]));
-                        this.Close();
+						where A.ID={0} and A.Org={1}", itemid, EntID);
+                            DataTable dt = MiddleDBInterface.getdt(sql, SQLHelper.sqlconn(Login.strConn));
+                            //this.dataGridView1.DataSource = dt;
+                            form3UserControls(form1contorlname3, Convert.ToString(dt.Rows[0]["料号"]), Convert.ToString(dt.Rows[0]["品名"]), Convert.ToString(dt.Rows[0]["材质"]), Convert.ToString(dt.Rows[0]["单位"]));
+                            this.Close();
+                        }
                     }
                 }
                 else
                 {
-                    string msg = ZJPostCreatItem(strJson);
-                    //{"d":"[{\"Error\":\"主分类名称不等边角钢不存在\",\"Result\":0,\"Method\":null,\"Msg\":\"fail\",\"ItemCode\":\"\"}]"}
-                    msg = msg.Substring(7);
-                    msg = msg.Remove(msg.Length - 3, 3);
-                    msg = msg.Replace(@"\", string.Empty);
-                    ResultModelForZJ resultModelForZJ = JsonConvert.DeserializeObject<ResultModelForZJ>(msg);
-                    if (resultModelForZJ.Msg == "fail")
-                    {
-                        MessageBox.Show(resultModelForZJ.Error);
-                    }
-                    else
-                    {
-                        string itemid = resultModelForZJ.ItemCode;
-                        string sql = string.Format(@"select A.Code 料号,A.Name+A.SPECS 品名,A.DescFlexField_PrivateDescSeg1 材质,A1.Code 单位
-                        from CBO_ItemMaster A
-						left join Base_UOM  A1 on A.InventoryUOM=A1.ID
-						where A.ID={0}", itemid);
-                        DataTable dt = MiddleDBInterface.getdt(sql, SQLHelper.sqlconn(Login.strConn));
-                        //this.dataGridView1.DataSource = dt;
-                        form3UserControls(form1contorlname3, Convert.ToString(dt.Rows[0]["料号"]), Convert.ToString(dt.Rows[0]["品名"]), Convert.ToString(dt.Rows[0]["材质"]), Convert.ToString(dt.Rows[0]["单位"]));
-                        this.Close();
-                    }
+                    MessageBox.Show("系统中品名" + itemcode + "对应的主分类不唯一");
                 }
-
             }
             else
             {
@@ -259,7 +276,34 @@ namespace WindowsApplication2
         }
 
 
-
+        /// <summary>
+        /// 获取当前料品的主分类是否唯一
+        /// </summary>
+        /// <returns></returns>
+        public static int itemMainItemCategoryCount(string name, ref string Code)
+        {
+            int count = 0;
+            string str = string.Format(@"select a.MainItemCategory,A1.Code from  CBO_ItemMaster  A
+            left join CBO_Category A1 on a1.ID=a.MainItemCategory
+            LEFT JOIN CBO_CategoryType A2 ON A2.ID=A1.CategorySystem
+            where a.Name='{0}' and a.Org='{1}' AND A2.Code='01'
+            group by a.MainItemCategory,A1.Code", name, EntID);
+            DataTable dt = MiddleDBInterface.getdt(str, SQLHelper.sqlconn(Login.strConn));
+            if (dt.Rows.Count == 0)
+            {
+                count = 0;
+            }
+            else if (dt.Rows.Count == 1)
+            {
+                count = 1;
+                Code = Convert.ToString(dt.Rows[0]["Code"]);
+            }
+            else
+            {
+                count = dt.Rows.Count;
+            }
+            return count;
+        }
         /// <summary>
         /// 创建料品
         /// </summary>
@@ -498,5 +542,6 @@ namespace WindowsApplication2
         public string CaiZ { get; set; }
         public string Unit { get; set; }
         public string Zhl { get; set; }
+        public string MainItemCategoryCode { get; set; }
     }
 }
