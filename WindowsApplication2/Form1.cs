@@ -842,9 +842,10 @@ namespace WindowsApplication2
             var request = new RestRequest(Method.POST);
             request.AddHeader("Content-Type", "application/json");
             str = "" + str.Replace("\"", "\\\"") + "";
-            string EntCode = getstr(Login.u9ContentHt["OrgCode"]);//上下文组织编码
+            string OrgCode = getstr(Login.u9ContentHt["OrgCode"]);//上下文组织编码
             string UserCode = getstr(Login.u9ContentHt["UserCode"]);//上下文用户编码
-            string body = "{\"context\":{\"CultureName\":\"zh-CN\",\"EntCode\":\"01\",\"OrgCode\":\"" + EntCode + "\",\"UserCode\":\"" + UserCode + "\"},\"args\":\"" + str + "\",\"action\":\"CreateBom\"}";
+            string EntCode = System.Configuration.ConfigurationManager.AppSettings["EnterpriseID"];//企业编码
+            string body = "{\"context\":{\"CultureName\":\"zh-CN\",\"EntCode\":\"" + EntCode + "\",\"OrgCode\":\"" + OrgCode + "\",\"UserCode\":\"" + UserCode + "\"},\"args\":\"" + str + "\",\"action\":\"CreateBom\"}";
             //body.Replace("strorg", getstr(Login.u9ContentHt["OrgCode"]));
             //body.Replace("struser", getstr(Login.u9ContentHt["UserCode"]));
             request.AddParameter("application/json", body, ParameterType.RequestBody);
@@ -863,9 +864,10 @@ namespace WindowsApplication2
             request.AddHeader("Content-Type", "application/json");
             //str = "" + str.Replace("\"", "\\\"") + "";
             str = ReplaceString(str);
-            string EntCode = getstr(Login.u9ContentHt["OrgCode"]);//上下文组织编码
+            string OrgCode = getstr(Login.u9ContentHt["OrgCode"]);//上下文组织编码
             string UserCode = getstr(Login.u9ContentHt["UserCode"]);//上下文用户编码
-            string body = "{\"context\":{\"CultureName\":\"zh-CN\",\"EntCode\":\"01\",\"OrgCode\":\"" + EntCode + "\",\"UserCode\":\"" + UserCode + "\"},\"args\":\"" + str + "\",\"action\":\"ZJCreateBom\"}";
+            string EntCode = System.Configuration.ConfigurationManager.AppSettings["EnterpriseID"];//企业编码
+            string body = "{\"context\":{\"CultureName\":\"zh-CN\",\"EntCode\":\"" + EntCode + "\",\"OrgCode\":\"" + OrgCode + "\",\"UserCode\":\"" + UserCode + "\"},\"args\":\"" + str + "\",\"action\":\"ZJCreateBom\"}";
             //body.Replace("strorg", getstr(Login.u9ContentHt["OrgCode"]));
             //body.Replace("struser", getstr(Login.u9ContentHt["UserCode"]));
             request.AddParameter("application/json", body, ParameterType.RequestBody);
@@ -1741,26 +1743,33 @@ namespace WindowsApplication2
 
         private void dataGridView1_CellMouseDoubleClick(object sender, DataGridViewCellMouseEventArgs e)
         {
+            string pItemDesc = string.Empty;
             //自接修改物料清单
             if (tabPage1.Text == "自接物料清单数据")
             {
 
                 //是否是末级物料
-                string sfmj = dataGridView1[13, e.RowIndex].Value?.ToString();
-                if (sfmj != "是") return;
+                //string sfmj = dataGridView1[13, e.RowIndex].Value?.ToString();
+                //if (sfmj != "是") return;
+               
 
                 int index = e.ColumnIndex;
                 string value = dataGridView1[e.ColumnIndex, e.RowIndex].Value?.ToString();
+                
                 //单位
                 string itemUnit = dataGridView1[4, e.RowIndex].Value?.ToString();
                 //如果是物料描述列修改  则进入新的form2
                 if (e.ColumnIndex == 7)
                 {
+                    //料品形态属性
+                    string itemAttribute = DataHelper.getStr(dataGridView1["料品形态属性", e.RowIndex].Value);
                     //Form3 form = new Form3(value, itemCz);
                     //form.Show();
-
+                    //母件物料描述
+                    pItemDesc = dataGridView1["母件物料描述", e.RowIndex].Value?.ToString();
+                    string caizhi= dataGridView1["母件材料", e.RowIndex].Value?.ToString();
                     controlname3 = ((DataGridView)sender).Name;
-                    Form3 f = new Form3(controlname3, itemUnit);
+                    Form3 f = new Form3(controlname3, itemUnit, pItemDesc, caizhi, itemAttribute);
                     f.Show();
                     f.form3UserControls += UpdataUIValue3;
                 }
@@ -1776,7 +1785,8 @@ namespace WindowsApplication2
                 if (e.ColumnIndex == 8)
                 {
                     controlname = ((DataGridView)sender).Name;
-                    Form2 f = new Form2(controlname, itemUnit);
+                    pItemDesc = dataGridView1["物料描述", e.RowIndex].Value?.ToString();
+                    Form2 f = new Form2(controlname, itemUnit, pItemDesc);
                     f.Show();
                     f.form2UserControls += UpdataUIValue;
                     //string[] temps = value.Split('_');

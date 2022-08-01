@@ -132,7 +132,7 @@ namespace WindowsApplication2
                 u9ContentHt.Add("UserCode", this.textBoxX1.Text.Trim());
                 u9ContentHt.Add("UserName", dt.Rows[0]["Name"].ToString());
                 u9ContentHt.Add("EnterpriseID", commUntil.GetConntionSetting("EnterpriseID"));
-                u9ContentHt.Add("EnterpriseName", commUntil.GetConntionSetting("EnterpriseName"));
+                //u9ContentHt.Add("EnterpriseName", commUntil.GetConntionSetting("EnterpriseName"));
                 u9ContentHt.Add("OrgID", getstr(ht_org[this.comboBox1.Text.Trim()]).Split('|')[0]);
                 u9ContentHt.Add("OrgCode", getstr(ht_org[this.comboBox1.Text.Trim()]).Split('|')[1]);
                 u9ContentHt.Add("OrgName", this.comboBox1.Text.Trim());

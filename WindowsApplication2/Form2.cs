@@ -25,13 +25,53 @@ namespace WindowsApplication2
         private string form1contorlname = "";
 
         public string unit = "";
-        public Form2(string contorlname, string itemUnit)
+        public Form2(string contorlname, string itemUnit,string pItemDesc)
         {
             InitializeComponent();
             this.StartPosition = FormStartPosition.CenterScreen;
             //this.dataGridView1.DataSource = getItemMasters(itemvalue);
             form1contorlname = contorlname;
             unit = itemUnit;
+            initGrid(pItemDesc);
+        }
+
+        private void initGrid(string pItemDesc)
+        {
+            string[] temps = pItemDesc.Split('_');
+            string caizhi = string.Empty;//材质
+            string itemSpecs = string.Empty;//规格
+            string name = string.Empty;//品名
+            caizhi = temps[1].ToString();
+            name = temps[0].ToString();
+            if (temps.Length >= 3)
+            {
+            
+                itemSpecs = temps[2].ToString();
+            } 
+   
+            string sql = string.Format(@"select A.Code 料号,A.Name 品名,A.DescFlexField_PrivateDescSeg1 材质,A.SPECS 规格,A3.Code 单位
+            from CBO_ItemMaster A
+            left join Base_UOM A3  ON A3.ID=A.InventoryUOM
+            where 1=1 and A.Effective_IsEffective=1 and A.Org=" + EntID + " ");
+
+
+            sql = sql + " and A.name='" + name + "'";
+            sql = sql + " and A.DescFlexField_PrivateDescSeg1='" + caizhi + "'";
+
+
+
+            sql = sql + " and A.SPECS='" + itemSpecs + "'";
+
+
+            sql = sql + " order by A.Code,A.name,A.SPECS,A.DescFlexField_PrivateDescSeg1,A3.Code";
+
+            //string sql = string.Format(@"select Code 料号,Name+SPECS 品名,DescFlexField_PrivateDescSeg1 材料 from CBO_ItemMaster where Name like '%{0}%' and DescFlexField_PrivateDescSeg1 = '{1}' 
+            //                            and SPECS='{2}' group by Code,name,SPECS,DescFlexField_PrivateDescSeg1
+            //                            ", toolStripTextBox3.Text, toolStripTextBox2.Text, toolStripTextBox1.Text);
+
+            DataTable dt = MiddleDBInterface.getdt(sql, SQLHelper.sqlconn(Login.strConn));
+            this.dataGridView1.DataSource = dt;
+            this.dataGridView1.Columns["单位"].Visible = false;
         }
 
         /// <summary>
@@ -87,41 +127,48 @@ namespace WindowsApplication2
         {
             DataGridViewRow row = dataGridView1.CurrentRow;
             if (row.Cells[0].Value == null) return;
-            form2UserControls(form1contorlname, row.Cells[0].Value.ToString(), row.Cells[1].Value.ToString(), row.Cells[2].Value.ToString());
+            form2UserControls(form1contorlname, row.Cells[0].Value.ToString(), row.Cells["品名"].Value.ToString() + '_' + row.Cells["材质"].Value.ToString() + '_' + row.Cells["规格"].Value.ToString(), row.Cells["单位"].Value.ToString());
             this.Close();
         }
 
         private void toolStripButton10_Click(object sender, EventArgs e)
         {
+            string strName = toolStripTextBox3.Text.Trim();//品名
 
-            if (string.IsNullOrEmpty(toolStripTextBox3.Text) && string.IsNullOrEmpty(toolStripTextBox1.Text) && string.IsNullOrEmpty(toolStripTextBox2.Text))
+            if (string.IsNullOrEmpty(strName) && string.IsNullOrEmpty(toolStripTextBox1.Text) && string.IsNullOrEmpty(toolStripTextBox2.Text))
             {
                 MessageBox.Show("请先输入查询条件");
                 return;
             }
 
-            string sql = string.Format(@"select '0000000000'+A.Code 料号,A.Name +'_'+A.DescFlexField_PrivateDescSeg1+'_'+A.SPECS 品名,A3.Code 单位
-            from CBO_ItemMaster A
-            left join CBO_Category A1 on A.MainItemCategory=A1.ID
-            left join CBO_Category_Trl A2 on A1.ID=A2.ID
-            left join Base_UOM A3  ON A3.ID=A.InventoryUOM
-            where 1=1 and A.Org=" + EntID + " ");
+            //string sql = string.Format(@"select '0000000000'+A.Code 料号,A.Name +'_'+A.DescFlexField_PrivateDescSeg1+'_'+A.SPECS 品名,A3.Code 单位
+            //from CBO_ItemMaster A
+            //left join CBO_Category A1 on A.MainItemCategory=A1.ID
+            //left join CBO_Category_Trl A2 on A1.ID=A2.ID
+            //left join Base_UOM A3  ON A3.ID=A.InventoryUOM
+            //where 1=1 and A.Org=" + EntID + " ");
 
-            if (!string.IsNullOrEmpty(toolStripTextBox3.Text))
+            string sql = string.Format(@"select A.Code 料号,A.Name 品名,A.DescFlexField_PrivateDescSeg1 材质,A.SPECS 规格,A3.Code 单位
+            from CBO_ItemMaster A
+            left join Base_UOM A3  ON A3.ID=A.InventoryUOM
+            where  A.Code like 'S%' and A.Name not like '%失效%'  and A.Effective_IsEffective=1 and A.Org=" + EntID + " ");
+
+            if (!string.IsNullOrEmpty(strName))
             {
-                sql = sql + " and A.Name='" + toolStripTextBox3.Text + "' and A2.Name='" + toolStripTextBox3.Text + "'";
+                //sql = sql + " and A.Name='" + toolStripTextBox3.Text + "' and A2.Name='" + toolStripTextBox3.Text + "'";
+                sql = sql + " and A.Name like '%" + strName + "%'";
             }
             if (!string.IsNullOrEmpty(toolStripTextBox2.Text))
             {
-                sql = sql + " and A.DescFlexField_PrivateDescSeg1='" + toolStripTextBox2.Text + "'";
+                sql = sql + " and A.DescFlexField_PrivateDescSeg1 like '%" + toolStripTextBox2.Text + "%'";
             }
 
             if (!string.IsNullOrEmpty(toolStripTextBox1.Text))
             {
-                sql = sql + " and A.SPECS='" + toolStripTextBox1.Text + "'";
+                sql = sql + " and A.SPECS like '%" + toolStripTextBox1.Text + "%'";
             }
 
-            sql = sql + " group by A.Code,A.name,A.SPECS,A.DescFlexField_PrivateDescSeg1,A3.Code";
+            sql = sql + " order by A.Code,A.name,A.SPECS,A.DescFlexField_PrivateDescSeg1,A3.Code";
 
             //string sql = string.Format(@"select Code 料号,Name+SPECS 品名,DescFlexField_PrivateDescSeg1 材料 from CBO_ItemMaster where Name like '%{0}%' and DescFlexField_PrivateDescSeg1 = '{1}' 
             //                            and SPECS='{2}' group by Code,name,SPECS,DescFlexField_PrivateDescSeg1
@@ -135,23 +182,27 @@ namespace WindowsApplication2
 
         private void toolStripButton1_Click(object sender, EventArgs e)
         {
-            if (!string.IsNullOrEmpty(toolStripTextBox3.Text) && !string.IsNullOrEmpty(toolStripTextBox1.Text))
+            string itemcode = toolStripTextBox3.Text.Trim();//品名
+            if (string.IsNullOrEmpty(itemcode))
             {
+                MessageBox.Show("品名必须输入");
+                return;
+            }
 
-                //1、钢管转化率：M = 0.0246615 * (D - t) * t
-                //M: 质量(Kg / m)
-                //D: 外径(mm)
-                //t: 壁厚(mm)
-                //例如钢管φ51 * 5转化率为：0.0246615 *（51 - 5）*5 = 5.672145 Kg / m
+            //1、钢管转化率：M = 0.0246615 * (D - t) * t
+            //M: 质量(Kg / m)
+            //D: 外径(mm)
+            //t: 壁厚(mm)
+            //例如钢管φ51 * 5转化率为：0.0246615 *（51 - 5）*5 = 5.672145 Kg / m
 
-                //2、扁钢转化率：M = t * B * 7.85 * 10 ^ (-3)
-                //M: 质量(Kg / m)
-                //t: 厚度(mm)
-                //B：宽度(mm)
-                //例如扁钢t6 * 20转化率为：6 * 20 * 7.85 * 10 ^ (-3) = 0.942Kg / m
+            //2、扁钢转化率：M = t * B * 7.85 * 10 ^ (-3)
+            //M: 质量(Kg / m)
+            //t: 厚度(mm)
+            //B：宽度(mm)
+            //例如扁钢t6 * 20转化率为：6 * 20 * 7.85 * 10 ^ (-3) = 0.942Kg / m
 
-                string itemcode = toolStripTextBox3.Text.Trim();//品名
-                string specs = toolStripTextBox1.Text.Trim();//规格
+
+            string specs = toolStripTextBox1.Text.Trim();//规格
                 string cz = toolStripTextBox2.Text.Trim();//材质
                 decimal zhl = 0;//转换率
                 //首先判断料品对应的主分类是否唯一
@@ -205,7 +256,7 @@ namespace WindowsApplication2
                         else
                         {
                             string itemid = resultModelForZJ.ItemCode;
-                            string sql = string.Format(@"select '0000000000'+A.Code 料号,A.Name +'_'+A.DescFlexField_PrivateDescSeg1+'_'+A.SPECS 品名,A1.Code 单位
+                            string sql = string.Format(@"select A.Code 料号,A.Name +'_'+A.DescFlexField_PrivateDescSeg1+'_'+A.SPECS 品名,A1.Code 单位
                             from CBO_ItemMaster A
 						    left join Base_UOM  A1 on A.InventoryUOM=A1.ID
 						    where A.ID={0} and A.Org={1}", itemid, EntID);
@@ -245,11 +296,7 @@ namespace WindowsApplication2
                 {
                     MessageBox.Show("系统中品名" + itemcode + "对应的主分类不唯一");
                 }
-            }
-            else
-            {
-                MessageBox.Show("品名规格必须输入");
-            }
+           
         }
 
 
@@ -260,11 +307,11 @@ namespace WindowsApplication2
         public static int itemMainItemCategoryCount(string name, ref string Code)
         {
             int count = 0;
-            string str = string.Format(@"select a.MainItemCategory,A1.Code from  CBO_ItemMaster  A
+            string str = string.Format(@"select distinct a.MainItemCategory,A1.Code from  CBO_ItemMaster  A
             left join CBO_Category A1 on a1.ID=a.MainItemCategory
             LEFT JOIN CBO_CategoryType A2 ON A2.ID=A1.CategorySystem
-            where a.Name='{0}' and a.Org='{1}' AND A2.Code='01'
-            group by a.MainItemCategory,A1.Code", name, EntID);
+            where a.Name='{0}' and a.Org='{1}' AND A2.Code='01' and A1.DescFlexField_PrivateDescSeg2!='true' 
+            order by a.MainItemCategory,A1.Code", name, EntID);
             DataTable dt = MiddleDBInterface.getdt(str, SQLHelper.sqlconn(Login.strConn));
             if (dt.Rows.Count == 0)
             {
@@ -298,9 +345,10 @@ namespace WindowsApplication2
             request.AddHeader("Content-Type", "application/json");
             //str = "" + str.Replace("\"", "\\\"") + "";
             str = ReplaceString(str);
-            string EntCode = getstr(Login.u9ContentHt["OrgCode"]);//上下文组织编码
+            string OrgCode = getstr(Login.u9ContentHt["OrgCode"]);//上下文组织编码
             string UserCode = getstr(Login.u9ContentHt["UserCode"]);//上下文用户编码
-            string body = "{\"context\":{\"CultureName\":\"zh-CN\",\"EntCode\":\"01\",\"OrgCode\":\"" + EntCode + "\",\"UserCode\":\"" + UserCode + "\"},\"args\":\"" + str + "\",\"action\":\"ZJAddForSgcgWinform\"}";
+            string EntCode = System.Configuration.ConfigurationManager.AppSettings["EnterpriseID"];//企业编码
+            string body = "{\"context\":{\"CultureName\":\"zh-CN\",\"EntCode\":\""+EntCode+"\",\"OrgCode\":\"" + OrgCode + "\",\"UserCode\":\"" + UserCode + "\"},\"args\":\"" + str + "\",\"action\":\"ZJAddForSgcgWinform\"}";
             //body.Replace("strorg", getstr(Login.u9ContentHt["OrgCode"]));
             //body.Replace("struser", getstr(Login.u9ContentHt["UserCode"]));
             request.AddParameter("application/json", body, ParameterType.RequestBody);
@@ -323,9 +371,10 @@ namespace WindowsApplication2
             request.AddHeader("Content-Type", "application/json");
             //str = "" + str.Replace("\"", "\\\"") + "";
             str = ReplaceString(str);
-            string EntCode = getstr(Login.u9ContentHt["OrgCode"]);//上下文组织编码
+            string OrgCode = getstr(Login.u9ContentHt["OrgCode"]);//上下文组织编码
             string UserCode = getstr(Login.u9ContentHt["UserCode"]);//上下文用户编码
-            string body = "{\"context\":{\"CultureName\":\"zh-CN\",\"EntCode\":\"01\",\"OrgCode\":\"" + EntCode + "\",\"UserCode\":\"" + UserCode + "\"},\"args\":\"" + str + "\",\"action\":\"ZJAddForSgcgWinformByZhl\"}";
+            string EntCode = System.Configuration.ConfigurationManager.AppSettings["EnterpriseID"];//企业编码
+            string body = "{\"context\":{\"CultureName\":\"zh-CN\",\"EntCode\":\""+EntCode+"\",\"OrgCode\":\"" + OrgCode + "\",\"UserCode\":\"" + UserCode + "\"},\"args\":\"" + str + "\",\"action\":\"ZJAddForSgcgWinformByZhl\"}";
             //body.Replace("strorg", getstr(Login.u9ContentHt["OrgCode"]));
             //body.Replace("struser", getstr(Login.u9ContentHt["UserCode"]));
             request.AddParameter("application/json", body, ParameterType.RequestBody);
@@ -446,7 +495,8 @@ namespace WindowsApplication2
         private void toolStripTextBox3_TextChanged(object sender, EventArgs e)
         {
             string itemcode = toolStripTextBox3.Text.Trim();//品名
-            string specs = toolStripTextBox1.Text.Trim();//规格
+            string specs = toolStripTextBox1.Text.Trim().Replace("M", "").Replace("W", "");//规格
+            string strWidth = string.Empty;//宽度
             if (itemcode == "钢管" && !string.IsNullOrEmpty(specs))
             {
                 if (specs.Contains("φ"))
@@ -455,7 +505,8 @@ namespace WindowsApplication2
                     string[] s1 = s[1].Split('*');
                     if (s1.Count() == 2)
                     {
-                        toolStripTextBox4.Text = Convert.ToString(Math.Round(Convert.ToDecimal(0.0246615) * (Convert.ToDecimal(s1[0]) - Convert.ToDecimal(s1[1])) * Convert.ToDecimal(s1[1]), 4));
+                        strWidth = s1[1].ToString().TrimEnd('.');
+                        toolStripTextBox4.Text = Convert.ToString(Math.Round(Convert.ToDecimal(0.0246615) * (Convert.ToDecimal(s1[0]) - Convert.ToDecimal(strWidth)) * Convert.ToDecimal(strWidth), 4));
                     }
                 }
             }
@@ -467,7 +518,8 @@ namespace WindowsApplication2
                     string[] s = specs.Split('*');
                     if (s.Count() == 2)
                     {
-                        toolStripTextBox4.Text = Convert.ToString(Math.Round(Convert.ToDecimal(s[0]) * Convert.ToDecimal(s[1]) * Convert.ToDecimal(7.85) * Convert.ToDecimal(0.001), 4));
+                        strWidth = s[1].ToString().TrimEnd('.');
+                        toolStripTextBox4.Text = Convert.ToString(Math.Round(Convert.ToDecimal(s[0]) * Convert.ToDecimal(strWidth) * Convert.ToDecimal(7.85) * Convert.ToDecimal(0.001), 4));
                     }
                 }
             }
@@ -482,7 +534,8 @@ namespace WindowsApplication2
         private void toolStripTextBox1_TextChanged(object sender, EventArgs e)
         {
             string itemcode = toolStripTextBox3.Text.Trim();//品名
-            string specs = toolStripTextBox1.Text.Trim();//规格
+            string specs = toolStripTextBox1.Text.Trim().Replace("M", "").Replace("W", "");//规格
+            string strWidth = string.Empty;//宽度
             if (specs.Contains("φ") && !string.IsNullOrEmpty(itemcode))
             {
                 if (itemcode == "钢管")
@@ -491,7 +544,8 @@ namespace WindowsApplication2
                     string[] s1 = s[1].Split('*');
                     if (s1.Count() == 2)
                     {
-                        toolStripTextBox4.Text = Convert.ToString(Math.Round(Convert.ToDecimal(0.0246615) * (Convert.ToDecimal(s1[0]) - Convert.ToDecimal(s1[1])) * Convert.ToDecimal(s1[1]), 4));
+                        strWidth = s1[1].ToString().TrimEnd('.');
+                        toolStripTextBox4.Text = Convert.ToString(Math.Round(Convert.ToDecimal(0.0246615) * (Convert.ToDecimal(s1[0]) - Convert.ToDecimal(strWidth)) * Convert.ToDecimal(strWidth), 4));
                     }
                 }
             }
@@ -503,11 +557,14 @@ namespace WindowsApplication2
                     string[] s = specs.Split('*');
                     if (s.Count() == 2)
                     {
-                        toolStripTextBox4.Text = Convert.ToString(Math.Round(Convert.ToDecimal(s[0]) * Convert.ToDecimal(s[1]) * Convert.ToDecimal(7.85) * Convert.ToDecimal(0.001), 4));
+                        strWidth = s[1].ToString().TrimEnd('.');
+                        toolStripTextBox4.Text = Convert.ToString(Math.Round(Convert.ToDecimal(s[0]) * Convert.ToDecimal(strWidth) * Convert.ToDecimal(7.85) * Convert.ToDecimal(0.001), 4));
                     }
                 }
             }
         }
+
+        
     }
 
 
