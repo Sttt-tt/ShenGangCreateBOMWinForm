@@ -45,7 +45,7 @@ namespace WindowsApplication2.VO
             this.Bzth = DataHelper.getStr(row.Cells["标准图号"].Value);//料品形态属性
             this.Yitemdesc = DataHelper.getStr(row.Cells["原物料描述"].Value);//料品形态属性
 
-            this.qty = Math.Round(useQty / parentQty, 4);//数量
+            this.qty = useQty;//数量
             //this.qty = useQty;
             this.private9 = DataHelper.getStr(row.Cells["备注"].Value);//子件料号
             this.material = DataHelper.getStr(row.Cells["材料"].Value);

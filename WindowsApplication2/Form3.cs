@@ -121,7 +121,7 @@ namespace WindowsApplication2
             string sql = @"select A.Code 料号,A.Name 品名,A.DescFlexField_PrivateDescSeg1 材质,A.SPECS 规格,A3.Code 单位
             from CBO_ItemMaster A
             left join Base_UOM A3  ON A3.ID=A.InventoryUOM
-            where 1=1 and A.Effective_IsEffective=1 and A.Org=" + EntID + " ";
+            where 1=1 and A.Code like 'S%' and A.Name not like '%失效%' and  A.Effective_IsEffective=1 and A.Org=" + EntID + " ";
 
             sql = sql + " and A.Name='" + ItemName + "'";
 
