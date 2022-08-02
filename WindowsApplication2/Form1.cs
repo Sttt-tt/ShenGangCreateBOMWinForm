@@ -41,7 +41,8 @@ namespace WindowsApplication2
             //this.tabControl1.TabPages.AddRange(this.tabPage1);
             toolStripComboBox1.ComboBox.Text = "";
             toolStripComboBox2.ComboBox.Text = "";
-            string str = "select wbs from cust_bomsg_data where wbs not in(select A1.Code from CBO_BOMMaster  A left join CBO_ItemMaster  A1 on A.ItemMaster=A1.ID left join Base_Organization A2 on A.Org=A2.ID where A2.Code='" + EntCode + "') group by wbs                                        ";
+            //string str = "select wbs from cust_bomsg_data where wbs not in(select A1.Code from CBO_BOMMaster  A left join CBO_ItemMaster  A1 on A.ItemMaster=A1.ID left join Base_Organization A2 on A.Org=A2.ID where A2.Code='" + EntCode + "') group by wbs                                        ";
+            string str = "select wbs from cust_bomsg_data group by wbs";
             DataSet ds = SqlHelper.ExecuteDataset(connectionString, CommandType.Text, str);
 
             if (!JudgeDs(ds))
@@ -57,7 +58,9 @@ namespace WindowsApplication2
                 toolStripComboBox1.ComboBox.Items.Add("上锅物料清单查询");
             }
 
-            string str2 = "select wbs from cust_bomzj_data where wbs not in(select A1.Code from CBO_BOMMaster  A left join CBO_ItemMaster  A1 on A.ItemMaster=A1.ID left join Base_Organization A2 on A.Org=A2.ID where A2.Code='" + EntCode + "') group by wbs                                        ";
+            //string str2 = "select wbs from cust_bomzj_data where wbs not in(select A1.Code from CBO_BOMMaster  A left join CBO_ItemMaster  A1 on A.ItemMaster=A1.ID left join Base_Organization A2 on A.Org=A2.ID where A2.Code='" + EntCode + "') group by wbs                                        ";
+
+            string str2 = "select wbs from cust_bomzj_data group by wbs";
             DataSet ds2 = SqlHelper.ExecuteDataset(connectionString, CommandType.Text, str2);
 
             if (!JudgeDs(ds2))
@@ -1066,7 +1069,7 @@ namespace WindowsApplication2
         }
 
 
-        public void UpdataUIValue3(string controlname, string code, string name, string cl, string unit)
+        public void UpdataUIValue3(string ItemDesc, string CaiZhi, string controlname, string code, string name, string cl, string unit)
         {
             switch (controlname)
             {
@@ -1091,6 +1094,24 @@ namespace WindowsApplication2
                         unit = "M";
                     }
                     row2.Cells["基本计量单位"].Value = unit;
+
+                    for (int i = 0; i < dataGridView1.RowCount; i++)
+                    {
+                        if (Convert.ToString(dataGridView1.Rows[i].Cells["母件物料描述"].Value) == ItemDesc && Convert.ToString(dataGridView1.Rows[i].Cells["母件材料"].Value) == CaiZhi)
+                        {
+
+                            CurrencyManager cm = (CurrencyManager)BindingContext[dataGridView1.DataSource];
+                            cm.SuspendBinding(); //挂起数据绑定
+                            //dataGridView1.ReadOnly = true; //继续，这行可选，如果你的datagridview是可编辑的就加上
+                            cm.ResumeBinding(); //继续数据绑定
+                            this.dataGridView1.Rows[i].Cells["物料编码"].Value = code;
+                            this.dataGridView1.Rows[i].Cells["物料描述"].Value = name;
+                            this.dataGridView1.Rows[i].Cells["材料"].Value = cl;
+                            this.dataGridView1.Rows[i].Cells["基本计量单位"].Value = unit;
+
+                        }
+
+                    }
                     break;
             }
         }

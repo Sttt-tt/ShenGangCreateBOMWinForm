@@ -18,13 +18,15 @@ namespace WindowsApplication2
     public partial class Form3 : Form
     {
         public static string EntID = getstr(Login.u9ContentHt["OrgID"]);//登陆组织ID
-        public delegate void form3UserControlValue(string controlname, string code, string name, string cl, string unit);
+        public delegate void form3UserControlValue(string ItemDesc, string CaiZhi, string controlname, string code, string name, string cl, string unit);
         public form3UserControlValue form3UserControls;
         private string form1contorlname3 = "";
         private string itemAttribute = string.Empty;//料品形态属性
         public string unit = "";
+        public string ItemDesc = string.Empty;
+        public string CaiZhi = string.Empty;
         //private string pItemCode = string.Empty;//料号
-        public Form3(string _pItemCode, string contorlname, string itemUnit,string pItemDesc,string caizhi,string _itemAttribute)
+        public Form3(string _pItemCode, string contorlname, string itemUnit, string pItemDesc, string caizhi, string _itemAttribute)
         {
             InitializeComponent();
             this.StartPosition = FormStartPosition.CenterScreen;
@@ -32,7 +34,9 @@ namespace WindowsApplication2
             form1contorlname3 = contorlname;
             unit = itemUnit;
             itemAttribute = _itemAttribute;
-            initGrid(_pItemCode,pItemDesc, caizhi);
+            initGrid(_pItemCode, pItemDesc, caizhi);
+            ItemDesc = pItemDesc;
+            CaiZhi = caizhi;
         }
 
 
@@ -70,7 +74,7 @@ namespace WindowsApplication2
 
             DataGridViewRow row = dataGridView1.CurrentRow;
             if (row.Cells[0].Value == null) return;
-            form3UserControls(form1contorlname3, row.Cells[0].Value.ToString(), row.Cells["品名"].Value.ToString()+ row.Cells["规格"].Value.ToString(), row.Cells["材质"].Value.ToString(), row.Cells["单位"].Value.ToString());
+            form3UserControls(ItemDesc, CaiZhi, form1contorlname3, row.Cells[0].Value.ToString(), row.Cells["品名"].Value.ToString() + row.Cells["规格"].Value.ToString(), row.Cells["材质"].Value.ToString(), row.Cells["单位"].Value.ToString());
             this.Close();
         }
 
@@ -101,21 +105,22 @@ namespace WindowsApplication2
         }
 
 
-        private void initGrid(string pItemCode, string pItemDesc, string caizhi) {
+        private void initGrid(string pItemCode, string pItemDesc, string caizhi)
+        {
             string ItemName = string.Empty;
             string itemSpecs = string.Empty;
             //国标处理
             if (pItemDesc.StartsWith(pItemCode))
             {
                 pItemDesc = pItemDesc.Replace(pItemCode, "");
-                ItemName =  string.IsNullOrEmpty(KeepChinese(pItemDesc)) ? Regex.Replace(pItemDesc, "[\u4e00-\u9fa5]", "", RegexOptions.IgnoreCase) : KeepChinese(pItemDesc);//物料名称
+                ItemName = string.IsNullOrEmpty(KeepChinese(pItemDesc)) ? Regex.Replace(pItemDesc, "[\u4e00-\u9fa5]", "", RegexOptions.IgnoreCase) : KeepChinese(pItemDesc);//物料名称
                 ItemName = pItemCode + ItemName;
-               
+
             }
             else
             {
                 ItemName = string.IsNullOrEmpty(KeepChinese(pItemDesc)) ? Regex.Replace(pItemDesc, "[\u4e00-\u9fa5]", "", RegexOptions.IgnoreCase) : KeepChinese(pItemDesc);//物料名称
-               
+
             }
             itemSpecs = Regex.Replace(pItemDesc, "[\u4e00-\u9fa5]", "", RegexOptions.IgnoreCase).Trim(); //物料规格型号
             string sql = @"select A.Code 料号,A.Name 品名,A.DescFlexField_PrivateDescSeg1 材质,A.SPECS 规格,A3.Code 单位
@@ -126,11 +131,11 @@ namespace WindowsApplication2
             sql = sql + " and A.Name='" + ItemName + "'";
 
             sql = sql + " and A.DescFlexField_PrivateDescSeg1='" + caizhi + "'";
-           
 
-            
-                sql = sql + " and A.SPECS='" + itemSpecs + "'";
-            
+
+
+            sql = sql + " and A.SPECS='" + itemSpecs + "'";
+
 
             sql = sql + " order by A.Code,A.name,A.SPECS,A.DescFlexField_PrivateDescSeg1,A3.Code";
 
@@ -294,7 +299,7 @@ namespace WindowsApplication2
 						where A.ID={0} and A.Effective_IsEffective=1 and A.Org={1}", itemid, EntID);
                         DataTable dt = MiddleDBInterface.getdt(sql, SQLHelper.sqlconn(Login.strConn));
                         //this.dataGridView1.DataSource = dt;
-                        form3UserControls(form1contorlname3, Convert.ToString(dt.Rows[0]["料号"]), Convert.ToString(dt.Rows[0]["品名"]), Convert.ToString(dt.Rows[0]["材质"]), Convert.ToString(dt.Rows[0]["单位"]));
+                        form3UserControls(ItemDesc, CaiZhi, form1contorlname3, Convert.ToString(dt.Rows[0]["料号"]), Convert.ToString(dt.Rows[0]["品名"]), Convert.ToString(dt.Rows[0]["材质"]), Convert.ToString(dt.Rows[0]["单位"]));
                         this.Close();
                     }
                 }
@@ -319,7 +324,7 @@ namespace WindowsApplication2
 						where A.ID={0} and A.Effective_IsEffective=1 and A.Org={1}", itemid, EntID);
                         DataTable dt = MiddleDBInterface.getdt(sql, SQLHelper.sqlconn(Login.strConn));
                         //this.dataGridView1.DataSource = dt;
-                        form3UserControls(form1contorlname3, Convert.ToString(dt.Rows[0]["料号"]), Convert.ToString(dt.Rows[0]["品名"]), Convert.ToString(dt.Rows[0]["材质"]), Convert.ToString(dt.Rows[0]["单位"]));
+                        form3UserControls(ItemDesc, CaiZhi, form1contorlname3, Convert.ToString(dt.Rows[0]["料号"]), Convert.ToString(dt.Rows[0]["品名"]), Convert.ToString(dt.Rows[0]["材质"]), Convert.ToString(dt.Rows[0]["单位"]));
                         this.Close();
                     }
                 }
@@ -597,7 +602,7 @@ namespace WindowsApplication2
             }
         }
 
-       
+
     }
 
 
