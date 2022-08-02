@@ -23,7 +23,8 @@ namespace WindowsApplication2
         private string form1contorlname3 = "";
         private string itemAttribute = string.Empty;//料品形态属性
         public string unit = "";
-        public Form3(string contorlname, string itemUnit,string pItemDesc,string caizhi,string _itemAttribute)
+        //private string pItemCode = string.Empty;//料号
+        public Form3(string _pItemCode, string contorlname, string itemUnit,string pItemDesc,string caizhi,string _itemAttribute)
         {
             InitializeComponent();
             this.StartPosition = FormStartPosition.CenterScreen;
@@ -31,7 +32,7 @@ namespace WindowsApplication2
             form1contorlname3 = contorlname;
             unit = itemUnit;
             itemAttribute = _itemAttribute;
-            initGrid(pItemDesc, caizhi);
+            initGrid(_pItemCode,pItemDesc, caizhi);
         }
 
 
@@ -100,10 +101,23 @@ namespace WindowsApplication2
         }
 
 
-        private void initGrid(string pItemDesc, string caizhi) {
-
-            string ItemName = string.IsNullOrEmpty(KeepChinese(pItemDesc)) ? Regex.Replace(pItemDesc, "[\u4e00-\u9fa5]", "", RegexOptions.IgnoreCase) : KeepChinese(pItemDesc);//物料名称
-            string itemSpecs = Regex.Replace(pItemDesc, "[\u4e00-\u9fa5]", "", RegexOptions.IgnoreCase); //物料规格型号
+        private void initGrid(string pItemCode, string pItemDesc, string caizhi) {
+            string ItemName = string.Empty;
+            string itemSpecs = string.Empty;
+            //国标处理
+            if (pItemDesc.StartsWith(pItemCode))
+            {
+                pItemDesc = pItemDesc.Replace(pItemCode, "");
+                ItemName =  string.IsNullOrEmpty(KeepChinese(pItemDesc)) ? Regex.Replace(pItemDesc, "[\u4e00-\u9fa5]", "", RegexOptions.IgnoreCase) : KeepChinese(pItemDesc);//物料名称
+                ItemName = pItemCode + ItemName;
+               
+            }
+            else
+            {
+                ItemName = string.IsNullOrEmpty(KeepChinese(pItemDesc)) ? Regex.Replace(pItemDesc, "[\u4e00-\u9fa5]", "", RegexOptions.IgnoreCase) : KeepChinese(pItemDesc);//物料名称
+               
+            }
+            itemSpecs = Regex.Replace(pItemDesc, "[\u4e00-\u9fa5]", "", RegexOptions.IgnoreCase).Trim(); //物料规格型号
             string sql = @"select A.Code 料号,A.Name 品名,A.DescFlexField_PrivateDescSeg1 材质,A.SPECS 规格,A3.Code 单位
             from CBO_ItemMaster A
             left join Base_UOM A3  ON A3.ID=A.InventoryUOM

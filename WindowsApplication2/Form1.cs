@@ -1397,6 +1397,7 @@ namespace WindowsApplication2
             this.dataGridView1.Columns["wbs"].Visible = false;
             this.dataGridView1.Columns["标准图号"].Visible = false;
             this.dataGridView1.Columns["原物料描述"].Visible = false;
+            this.dataGridView1.Columns["母件基本计量单位"].Visible = false;
 
             //隐藏1.2.3.4.5.6.7.8.9.10......
             for (int i = 0; i < dataGridView1.RowCount; i++)
@@ -1519,12 +1520,13 @@ namespace WindowsApplication2
 
                 else if (!string.IsNullOrEmpty(rtnmsg) && rtnmsg != "{\"d\":\"\"}")
                 {
+                    TD.Abort();
                     if (rtnmsg.Contains("项目已存在"))
                     {
                         return;
                     }
                     {
-                        TD.Abort();
+
                         msg("创建失败：" + rtnmsg);
                     }
                 }
@@ -1751,11 +1753,11 @@ namespace WindowsApplication2
                 //是否是末级物料
                 //string sfmj = dataGridView1[13, e.RowIndex].Value?.ToString();
                 //if (sfmj != "是") return;
-               
+
 
                 int index = e.ColumnIndex;
                 string value = dataGridView1[e.ColumnIndex, e.RowIndex].Value?.ToString();
-                
+
                 //单位
                 string itemUnit = dataGridView1[4, e.RowIndex].Value?.ToString();
                 //如果是物料描述列修改  则进入新的form2
@@ -1767,9 +1769,10 @@ namespace WindowsApplication2
                     //form.Show();
                     //母件物料描述
                     pItemDesc = dataGridView1["母件物料描述", e.RowIndex].Value?.ToString();
-                    string caizhi= dataGridView1["母件材料", e.RowIndex].Value?.ToString();
+                    string pItemCode = dataGridView1["母件料品", e.RowIndex].Value?.ToString().Split('(')[0];
+                    string caizhi = dataGridView1["母件材料", e.RowIndex].Value?.ToString();
                     controlname3 = ((DataGridView)sender).Name;
-                    Form3 f = new Form3(controlname3, itemUnit, pItemDesc, caizhi, itemAttribute);
+                    Form3 f = new Form3(pItemCode, controlname3, itemUnit, pItemDesc, caizhi, itemAttribute);
                     f.Show();
                     f.form3UserControls += UpdataUIValue3;
                 }

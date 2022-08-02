@@ -827,15 +827,15 @@ namespace WindowsApplication2
                                 //else
                                 //{
                                 //DataTable dataTable2 = getItemMasters(Convert.ToString(row["物料描述"]), Convert.ToString(row["材料"]));
-                                DataTable dataTable2 = getSingleItemMaster(Convert.ToString(row["物料描述"]), Convert.ToString(row["材料"]));
+                                DataTable dataTable2 = getSingleItemMaster(DataHelper.getStr(row["物料编码"]), Convert.ToString(row["物料描述"]), Convert.ToString(row["材料"]));
                                 DataRow drr = dt.NewRow();
-                                    drr["wbs"] = itemCode;
-                                    drr["序号"] = row["序号"] + "/" + "1";
-                                    drr["母件料品"] = row["物料编码"];
-                                    drr["母件物料描述"] = row["物料描述"];
-                                    drr["母件材料"] = row["材料"];
-                                    drr["母件基本计量单位"] = "KG";
-                                    drr["母件用量"] = row["用量"];
+                                drr["wbs"] = itemCode;
+                                drr["序号"] = row["序号"] + "/" + "1";
+                                drr["母件料品"] = row["物料编码"];
+                                drr["母件物料描述"] = row["物料描述"];
+                                drr["母件材料"] = row["材料"];
+                                drr["母件基本计量单位"] = "KG";
+                                drr["母件用量"] = row["用量"];
                                 //dr["物料编码"] = wl[0] + "-" + wl[1] + "-" + wl[2] + "-" + "1" + "-" + "0" + "(" + row["序号"] + "/" + "1" + ")";
                                 //dr["物料描述"] = wl[0] + "-" + wl[1] + "-" + wl[2] + "-" + "1" + "-" + "0" + "(" + row["序号"] + "/" + "1" + ")";
                                 if (dataTable2 != null && dataTable2.Rows.Count == 1)
@@ -846,14 +846,14 @@ namespace WindowsApplication2
                                     //drr["数量/重量"] = row["用量"];
                                     drr["材料"] = dataTable2.Rows[0]["材料"];
                                 }
-                                    //drr["单重"] = 0;
-                                    drr["是否虚拟"] = "是";
-                                    drr["料品形态属性"] = "采购件";
-                                    drr["备注"] = row["备注"];
-                                    //drr["转换率"] = row["转换率"];
-                                    drr["标准图号"] = row["标准图号"];
-                                    drr["原物料描述"] = row["原物料描述"];
-                                    dt.Rows.Add(drr);
+                                //drr["单重"] = 0;
+                                drr["是否虚拟"] = "是";
+                                drr["料品形态属性"] = "采购件";
+                                drr["备注"] = row["备注"];
+                                //drr["转换率"] = row["转换率"];
+                                drr["标准图号"] = row["标准图号"];
+                                drr["原物料描述"] = row["原物料描述"];
+                                dt.Rows.Add(drr);
                                 //}
                             }
                         }
@@ -925,15 +925,15 @@ namespace WindowsApplication2
                                     //else
                                     //{
                                     //DataTable dataTable2 = getItemMasters(Convert.ToString(row["物料描述"]), Convert.ToString(row["材料"]));
-                                    DataTable dataTable2 = getSingleItemMaster(Convert.ToString(row["物料描述"]), Convert.ToString(row["材料"]));
+                                    DataTable dataTable2 = getSingleItemMaster(DataHelper.getStr(row["物料编码"]), Convert.ToString(row["物料描述"]), Convert.ToString(row["材料"]));
                                     DataRow drr = dt.NewRow();
-                                        drr["wbs"] = itemCode;
-                                        drr["序号"] = row["序号"] + "-" + "1";
-                                        drr["母件料品"] = row["物料编码"];
-                                        drr["母件物料描述"] = row["物料描述"];
-                                        drr["母件材料"] = row["材料"];
-                                        drr["母件基本计量单位"] = "KG";
-                                        drr["母件用量"] = row["用量"];
+                                    drr["wbs"] = itemCode;
+                                    drr["序号"] = row["序号"] + "-" + "1";
+                                    drr["母件料品"] = row["物料编码"];
+                                    drr["母件物料描述"] = row["物料描述"];
+                                    drr["母件材料"] = row["材料"];
+                                    drr["母件基本计量单位"] = "KG";
+                                    drr["母件用量"] = row["用量"];
                                     //dr["物料编码"] = wl[0] + "-" + wl[1] + "-" + wl[2] + "-" + "1" + "-" + "0" + "(" + row["序号"] + "/" + "1" + ")";
                                     //dr["物料描述"] = wl[0] + "-" + wl[1] + "-" + wl[2] + "-" + "1" + "-" + "0" + "(" + row["序号"] + "/" + "1" + ")";
                                     if (dataTable2 != null && dataTable2.Rows.Count == 1)
@@ -946,12 +946,12 @@ namespace WindowsApplication2
                                     }
                                     //drr["单重"] = 0;
                                     drr["是否虚拟"] = "是";
-                                        drr["料品形态属性"] = "采购件";
-                                        drr["备注"] = row["备注"];
-                                        //drr["转换率"] = row["转换率"];
-                                        drr["标准图号"] = row["标准图号"];
-                                        drr["原物料描述"] = row["原物料描述"];
-                                        dt.Rows.Add(drr);
+                                    drr["料品形态属性"] = "采购件";
+                                    drr["备注"] = row["备注"];
+                                    //drr["转换率"] = row["转换率"];
+                                    drr["标准图号"] = row["标准图号"];
+                                    drr["原物料描述"] = row["原物料描述"];
+                                    dt.Rows.Add(drr);
                                     //}
                                 }
                             }
@@ -1022,16 +1022,16 @@ namespace WindowsApplication2
                                     //}
                                     //else
                                     //{
-                                        //DataTable dataTable2 = getItemMasters(Convert.ToString(row["物料描述"]), Convert.ToString(row["材料"]));
-                                        DataTable dataTable2 = getSingleItemMaster(Convert.ToString(row["物料描述"]), Convert.ToString(row["材料"]));
-                                        DataRow drr = dt.NewRow();
-                                        drr["wbs"] = itemCode;
-                                        drr["序号"] = row["序号"] + "/" + "1";
-                                        drr["母件料品"] = row["物料编码"];
-                                        drr["母件物料描述"] = row["物料描述"];
-                                        drr["母件材料"] = row["材料"];
-                                        drr["母件基本计量单位"] = "KG";
-                                        drr["母件用量"] = row["用量"];
+                                    //DataTable dataTable2 = getItemMasters(Convert.ToString(row["物料描述"]), Convert.ToString(row["材料"]));
+                                    DataTable dataTable2 = getSingleItemMaster(DataHelper.getStr(row["物料编码"]), Convert.ToString(row["物料描述"]), Convert.ToString(row["材料"]));
+                                    DataRow drr = dt.NewRow();
+                                    drr["wbs"] = itemCode;
+                                    drr["序号"] = row["序号"] + "/" + "1";
+                                    drr["母件料品"] = row["物料编码"];
+                                    drr["母件物料描述"] = row["物料描述"];
+                                    drr["母件材料"] = row["材料"];
+                                    drr["母件基本计量单位"] = "KG";
+                                    drr["母件用量"] = row["用量"];
                                     //dr["物料编码"] = wl[0] + "-" + wl[1] + "-" + wl[2] + "-" + "1" + "-" + "0" + "(" + row["序号"] + "/" + "1" + ")";
                                     //dr["物料描述"] = wl[0] + "-" + wl[1] + "-" + wl[2] + "-" + "1" + "-" + "0" + "(" + row["序号"] + "/" + "1" + ")";
                                     if (dataTable2 != null && dataTable2.Rows.Count == 1)
@@ -1042,14 +1042,14 @@ namespace WindowsApplication2
                                         //drr["数量/重量"] = row["用量"];
                                         drr["材料"] = dataTable2.Rows[0]["材料"];
                                     }
-                                        //drr["单重"] = 0;
-                                        drr["是否虚拟"] = "是";
-                                        drr["料品形态属性"] = "采购件";
-                                        drr["备注"] = row["备注"];
-                                        //drr["转换率"] = row["转换率"];
-                                        drr["标准图号"] = row["标准图号"];
-                                        drr["原物料描述"] = row["原物料描述"];
-                                        dt.Rows.Add(drr);
+                                    //drr["单重"] = 0;
+                                    drr["是否虚拟"] = "是";
+                                    drr["料品形态属性"] = "采购件";
+                                    drr["备注"] = row["备注"];
+                                    //drr["转换率"] = row["转换率"];
+                                    drr["标准图号"] = row["标准图号"];
+                                    drr["原物料描述"] = row["原物料描述"];
+                                    dt.Rows.Add(drr);
                                     //}
                                 }
                             }
@@ -1093,9 +1093,9 @@ namespace WindowsApplication2
             string sql = string.Empty;
             sql = string.Format(@"select  Code 料号,Name+SPECS 品名,DescFlexField_PrivateDescSeg1 材料 from CBO_ItemMaster where Name='{0}' and DescFlexField_PrivateDescSeg1 = '{1}' 
                                         and SPECS ='{2}' and Effective_IsEffective=1 
-                                        ", ItemName, itemCz, ItemSPECS);
+                                        ", ItemName.Trim(), itemCz.Trim(), ItemSPECS.Trim());
             dt = MiddleDBInterface.getdt(sql, SQLHelper.sqlconn(Login.strConn));
-          
+
             return dt;
         }
         /// <summary>
@@ -1104,28 +1104,40 @@ namespace WindowsApplication2
         /// <param name="item"></param>
         /// <param name="itemCz"></param>
         /// <returns></returns>
-        private DataTable getSingleItemMaster(string item, string itemCz)
+        private DataTable getSingleItemMaster(string code, string item, string itemCz)
         {
-            string ItemName = string.IsNullOrEmpty(KeepChinese(item)) ? Regex.Replace(item, "[\u4e00-\u9fa5]", "", RegexOptions.IgnoreCase).Trim() : KeepChinese(item).Trim();//物料名称
+            string ItemName = string.Empty;
+            code = code.Split('(')[0];
+            //国标处理
+            if (item.StartsWith(code))
+            {
+                item = item.Replace(code, "");
+                ItemName = string.IsNullOrEmpty(KeepChinese(item)) ? Regex.Replace(item, "[\u4e00-\u9fa5]", "", RegexOptions.IgnoreCase).Trim() : KeepChinese(item).Trim();//物料名称
+                ItemName = code + ItemName;
+
+            }
+            else
+            {
+                ItemName = string.IsNullOrEmpty(KeepChinese(item)) ? Regex.Replace(item, "[\u4e00-\u9fa5]", "", RegexOptions.IgnoreCase).Trim() : KeepChinese(item).Trim();//物料名称
+
+            }
             string ItemSPECS = Regex.Replace(item, "[\u4e00-\u9fa5]", "", RegexOptions.IgnoreCase).Trim(); //物料规格型号
             DataTable dt = new DataTable();
             string sql = string.Empty;
             sql = $@"select  A.Code 料号,A.Name+A.SPECS 品名,A.DescFlexField_PrivateDescSeg1 材料,A3.Code 单位 
-from CBO_ItemMaster  A
+            from CBO_ItemMaster  A
             left join Base_UOM A3  ON A3.ID=A.InventorySecondUOM 
-        
-where A.Name='{ItemName}' and A.DescFlexField_PrivateDescSeg1 = '{itemCz}' 
-                                        and A.SPECS ='{ItemSPECS}' and A.Effective_IsEffective=1  and A.Org={DataHelper.getStr(Login.u9ContentHt["OrgID"])}";
+            where A.Name='{ItemName}' and A.DescFlexField_PrivateDescSeg1 = '{itemCz}' 
+            and A.SPECS ='{ItemSPECS}' and A.Effective_IsEffective=1  and A.Org={DataHelper.getStr(Login.u9ContentHt["OrgID"])}";
             dt = MiddleDBInterface.getdt(sql, SQLHelper.sqlconn(Login.strConn));
             if (dt == null || dt.Rows.Count <= 0)
             {
 
                 sql = $@"select  A.Code 料号,A.Name+A.SPECS 品名,A.DescFlexField_PrivateDescSeg1 材料 ,A3.Code 单位 
-from CBO_ItemMaster  A
+            from CBO_ItemMaster  A
             left join Base_UOM A3  ON A3.ID=A.InventorySecondUOM 
-        
-where A.DescFlexField_PrivateDescSeg1 = '{itemCz}' 
-                                        and A.SPECS ='{ItemSPECS}' and A.Effective_IsEffective=1  and A.Org={DataHelper.getStr(Login.u9ContentHt["OrgID"])}";
+            where A.DescFlexField_PrivateDescSeg1 = '{itemCz}' 
+            and A.SPECS ='{ItemSPECS}' and A.Effective_IsEffective=1  and A.Org={DataHelper.getStr(Login.u9ContentHt["OrgID"])}";
                 dt = MiddleDBInterface.getdt(sql, SQLHelper.sqlconn(Login.strConn));
             }
             return dt;
@@ -1139,9 +1151,9 @@ where A.DescFlexField_PrivateDescSeg1 = '{itemCz}'
             string ItemSPECS = Regex.Replace(item, "[\u4e00-\u9fa5]", "", RegexOptions.IgnoreCase); //物料规格型号
             DataTable dt = new DataTable();
             string sql = string.Empty;
-            sql = string.Format(@"select count(*) count from CBO_ItemMaster where Name='{0}' and DescFlexField_PrivateDescSeg1 = '{0}' 
-                                        and SPECS ='{1}' and Effective_IsEffective=1 
-                                        ", ItemName, itemCz, ItemSPECS);
+            sql = string.Format(@"select count(*) count from CBO_ItemMaster where Name='{0}' and DescFlexField_PrivateDescSeg1 = '{1}' 
+                                        and SPECS ='{2}' and Effective_IsEffective=1 
+                                        ", ItemName.Trim(), itemCz.Trim(), ItemSPECS.Trim());
             dt = MiddleDBInterface.getdt(sql, SQLHelper.sqlconn(Login.strConn));
             count = Convert.ToInt32(dt.Rows[0]["count"]);
             return count;
