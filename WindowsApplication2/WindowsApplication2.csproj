@@ -156,6 +156,7 @@
     </Compile>
     <Compile Include="Helper\DataHelper.cs" />
     <Compile Include="Helper\HttpClientHelper.cs" />
+    <Compile Include="Helper\PubHelper.cs" />
     <Compile Include="Helper\SqlBulkCopyHelper.cs" />
     <Compile Include="Helper\SqlHelper.cs" />
     <Compile Include="InitSet.cs" />

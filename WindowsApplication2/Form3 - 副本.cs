@@ -18,7 +18,7 @@ namespace WindowsApplication2
 
     public partial class Form3 : Form
     {
-        public static string EntID = DataHelper.getStr(Login.u9ContentHt["OrgID"]);//登陆组织ID
+        public static string EntID = getstr(Login.u9ContentHt["OrgID"]);//登陆组织ID
         public delegate void form3UserControlValue(string ItemDesc, string CaiZhi, string controlname, string code, string name, string cl, string unit);
         public form3UserControlValue form3UserControls;
         private string form1contorlname3 = "";
@@ -123,9 +123,9 @@ namespace WindowsApplication2
 
             }
             string itemSpecs = Regex.Replace(pItemDesc, "[\u4e00-\u9fa5]", "", RegexOptions.IgnoreCase).Trim(); //物料规格型号
-            string sql = @"select A.Code 料号,A.Name 品名,A.DescFlexField_PrivateDescSeg1 材质,A.SPECS 规格,A3.Name 单位
+            string sql = @"select A.Code 料号,A.Name 品名,A.DescFlexField_PrivateDescSeg1 材质,A.SPECS 规格,A3.Code 单位
             from CBO_ItemMaster A
-            left join Base_UOM_trl A3  ON A3.ID=A.InventoryUOM and A3.SysMLFlag='zh-CN' 
+            left join Base_UOM A3  ON A3.ID=A.InventoryUOM
             where 1=1 and A.Code like 'S%' and A.Name not like '%失效%' and  A.Effective_IsEffective=1 and A.Org=" + EntID + " ";
 
             sql = sql + " and A.Name='" + ItemName + "'";
@@ -137,7 +137,7 @@ namespace WindowsApplication2
             sql = sql + " and A.SPECS='" + itemSpecs + "'";
 
 
-            sql = sql + " order by A.Code,A.name,A.SPECS";
+            sql = sql + " order by A.Code,A.name,A.SPECS,A.DescFlexField_PrivateDescSeg1,A3.Code";
 
             //string sql = string.Format(@"select Code 料号,Name+SPECS 品名,DescFlexField_PrivateDescSeg1 材料 from CBO_ItemMaster where Name like '%{0}%' and DescFlexField_PrivateDescSeg1 = '{1}' 
             //                            and SPECS='{2}' group by Code,name,SPECS,DescFlexField_PrivateDescSeg1
@@ -180,9 +180,9 @@ namespace WindowsApplication2
             //where 1=1 and A.Org=" + EntID + " ");
 
 
-            string sql = string.Format(@"select A.Code 料号,A.Name 品名,A.DescFlexField_PrivateDescSeg1 材质,A.SPECS 规格,A3.Name 单位
+            string sql = string.Format(@"select A.Code 料号,A.Name 品名,A.DescFlexField_PrivateDescSeg1 材质,A.SPECS 规格,A3.Code 单位
             from CBO_ItemMaster A
-            left join Base_UOM_trl A3  ON A3.ID=A.InventoryUOM and A3.SysMLFlag='zh-CN' 
+            left join Base_UOM A3  ON A3.ID=A.InventoryUOM
             where A.Code like 'S%' and A.Name not like '%失效%' and A.Effective_IsEffective=1  and A.Org=" + EntID + " ");
 
             if (!string.IsNullOrEmpty(strName))
@@ -200,7 +200,7 @@ namespace WindowsApplication2
                 sql = sql + " and A.SPECS like '%" + toolStripTextBox1.Text + "%'";
             }
 
-            sql = sql + " order by A.Code,A.name,A.SPECS";
+            sql = sql + " order by A.Code,A.name,A.SPECS,A.DescFlexField_PrivateDescSeg1,A3.Code";
 
             //string sql = string.Format(@"select Code 料号,Name+SPECS 品名,DescFlexField_PrivateDescSeg1 材料 from CBO_ItemMaster where Name like '%{0}%' and DescFlexField_PrivateDescSeg1 = '{1}' 
             //                            and SPECS='{2}' group by Code,name,SPECS,DescFlexField_PrivateDescSeg1
@@ -219,25 +219,32 @@ namespace WindowsApplication2
         /// <param name="e"></param>
         private void toolStripButton1_Click(object sender, EventArgs e)
         {
-            //20220804存货主分类改由前台传
-            string categoryName = DataHelper.getStr(txtCategoryName.Text);//主分类
             string itemName = toolStripTextBox3.Text.Trim();//品名
-            if (string.IsNullOrEmpty(itemName) || string.IsNullOrEmpty(categoryName))
+            if (string.IsNullOrEmpty(itemName))
             {
-                MessageBox.Show("主分类和品名不能空值");
+                MessageBox.Show("品名必须输入");
                 return;
             }
-            string categoryCode = PubHelper.getMainCategroyCodeByName(Login.strConn, categoryName, EntID);
-            if (string.IsNullOrEmpty(categoryCode))
+            //双单位集合 配置文件里设置
+            string[] mainCategoryCodeS = System.Configuration.ConfigurationManager.AppSettings["DoubleUOM"].Split(',');
+
+
+            //公斤是W013  米是L007  PCS就是PCS 
+            string strUOMCode = string.Empty;//单位编码
+            string strUOMName = this.txtUOMcbx.Text;//单位名称
+            switch (strUOMName)
             {
-                MessageBox.Show($"主分类{categoryName}系统中不存在");
-                this.txtCategoryName.Focus();
-                return;
+                case "公斤":
+                    strUOMCode = "W013";
+                    break;
+                case "米":
+                    strUOMCode = "L007";
+                    break;
+                default:
+                    strUOMCode = "PCS";
+                    break;
             }
-
-
-            string strUOMName = DataHelper.getStr(this.txtUOMcbx.Text);//单位名称
-            string strUOMCode = PubHelper.GetUOMCode(strUOMName);//单位编码
+          
 
             //1、钢管转化率：M = 0.0246615 * (D - t) * t
             //M: 质量(Kg / m)
@@ -251,75 +258,104 @@ namespace WindowsApplication2
             //B：宽度(mm)
             //例如扁钢t6 * 20转化率为：6 * 20 * 7.85 * 10 ^ (-3) = 0.942Kg / m
 
-
+            //自接导入U9的制造件料号，主分类都是上锅产成品，自接部分制造件的分类改为主分类编码为S1112的自接成品
             string specs = toolStripTextBox1.Text.Trim();//规格
             string cz = toolStripTextBox2.Text.Trim();//材质
-            decimal zhl = DataHelper.getDecimal(toolStripTextBox4.Text);//转换率
-            bool isDualUOM = PubHelper.chkIsDualUOM(categoryName);//主分类是否双单位
-            if (isDualUOM && zhl <= 0)
+            decimal zhl = 0;//转换率
+                            //首先判断料品对应的主分类是否唯一
+            string mainCategoryCode = string.Empty;
+            int count = itemAttribute == "制造件" ? 1 : itemMainItemCategoryCount(itemName, ref mainCategoryCode);
+
+            if (count == 0)
             {
-                MessageBox.Show($"存货主分类{categoryName}转换率必输!");
-                this.toolStripTextBox4.Focus();
+                MessageBox.Show("系统中不存在品名" + itemName + "对应的主分类");
                 return;
             }
-            ItemInfo itemInfo = new ItemInfo();
-            itemInfo.ItemName = itemName;
-            itemInfo.Specs = specs;
-            itemInfo.CaiZ = cz;
-            itemInfo.Zhl = zhl.ToString();
-            itemInfo.Unit = strUOMCode;
-            itemInfo.MainItemCategoryCode = categoryCode;
-            string strJson = JsonConvert.SerializeObject(itemInfo);
-            //      if (zhl > 0)
-            //      {
-            //          string msg = ZJPostCreatItemByZhl(strJson);
-            //          msg = msg.Substring(7);
-            //          msg = msg.Remove(msg.Length - 3, 3);
-            //          msg = msg.Replace(@"\", string.Empty);
-            //          ResultModelForZJ resultModelForZJ = JsonConvert.DeserializeObject<ResultModelForZJ>(msg);
-            //          if (resultModelForZJ.Msg == "fail")
-            //          {
-            //              MessageBox.Show(resultModelForZJ.Error);
-            //          }
-            //          else
-            //          {
-            //              string itemid = resultModelForZJ.ItemCode;
-            //              string sql = string.Format(@"select A.Code 料号,A.Name+A.SPECS 品名,A.DescFlexField_PrivateDescSeg1 材质,A1.Code 单位
-            //                  from CBO_ItemMaster A
-            //left join Base_UOM  A1 on A.InventoryUOM=A1.ID
-            //where A.ID={0} and A.Effective_IsEffective=1 and A.Org={1}", itemid, EntID);
-            //              DataTable dt = MiddleDBInterface.getdt(sql, SQLHelper.sqlconn(Login.strConn));
-            //              //this.dataGridView1.DataSource = dt;
-            //              form3UserControls(ItemDesc, CaiZhi, form1contorlname3, Convert.ToString(dt.Rows[0]["料号"]), Convert.ToString(dt.Rows[0]["品名"]), Convert.ToString(dt.Rows[0]["材质"]), Convert.ToString(dt.Rows[0]["单位"]));
-            //              this.Close();
-            //          }
-            //      }
-            //      else
-            //      {
-            string strAction = zhl > 0 ? "ZJAddForSgcgWinformByZhl" : "ZJAddForSgcgWinform";
-            string msg = ZJPostCreatItem(strJson, "ZJAddForSgcgWinform");
-            //{"d":"[{\"Error\":\"主分类名称不等边角钢不存在\",\"Result\":0,\"Method\":null,\"Msg\":\"fail\",\"ItemCode\":\"\"}]"}
-            msg = msg.Substring(7);
-            msg = msg.Remove(msg.Length - 3, 3);
-            msg = msg.Replace(@"\", string.Empty);
-            ResultModelForZJ resultModelForZJ = JsonConvert.DeserializeObject<ResultModelForZJ>(msg);
-            if (resultModelForZJ.Msg == "fail")
+             if (count == 1)
             {
-                MessageBox.Show(resultModelForZJ.Error);
+                //if (itemcode == "钢管" && specs.Contains("φ"))
+                //{
+                //    string[] s = specs.Trim().Split('φ');
+                //    string[] s1 = s[1].Split('*');
+                //    if (s1.Count() == 2)
+                //    {
+                //        zhl = Convert.ToDecimal(0.0246615) * (Convert.ToDecimal(s1[0]) - Convert.ToDecimal(s1[1])) * Convert.ToDecimal(s1[1]);
+                //    }
+                //}
+                //if (itemcode == "扁钢" && specs.Contains("*"))
+                //{
+                //    specs = specs.Replace("t", "");
+                //    string[] s = specs.Split('*');
+                //    zhl = Convert.ToDecimal(s[0]) * Convert.ToDecimal(s[1]) * Convert.ToDecimal(7.85) * Convert.ToDecimal(0.001);
+                //}
+                if (!string.IsNullOrEmpty(toolStripTextBox4.Text))
+                {
+                    zhl = Convert.ToDecimal(toolStripTextBox4.Text);
+                }
+                ItemInfo itemInfo = new ItemInfo();
+                itemInfo.ItemName = itemName;
+                itemInfo.Specs = specs;
+                itemInfo.CaiZ = cz;
+                itemInfo.Zhl = zhl.ToString();
+                itemInfo.Unit = itemAttribute == "制造件" ? "PCS" : strUOMCode;
+                itemInfo.MainItemCategoryCode = itemAttribute == "制造件" ? "S1112" : mainCategoryCode;
+                string strJson = Newtonsoft.Json.JsonConvert.SerializeObject(itemInfo);
+                if (zhl > 0)
+                {
+                    string msg = ZJPostCreatItemByZhl(strJson);
+                    msg = msg.Substring(7);
+                    msg = msg.Remove(msg.Length - 3, 3);
+                    msg = msg.Replace(@"\", string.Empty);
+                    ResultModelForZJ resultModelForZJ = JsonConvert.DeserializeObject<ResultModelForZJ>(msg);
+                    if (resultModelForZJ.Msg == "fail")
+                    {
+                        MessageBox.Show(resultModelForZJ.Error);
+                    }
+                    else
+                    {
+                        string itemid = resultModelForZJ.ItemCode;
+                        string sql = string.Format(@"select A.Code 料号,A.Name+A.SPECS 品名,A.DescFlexField_PrivateDescSeg1 材质,A1.Code 单位
+                        from CBO_ItemMaster A
+						left join Base_UOM  A1 on A.InventoryUOM=A1.ID
+						where A.ID={0} and A.Effective_IsEffective=1 and A.Org={1}", itemid, EntID);
+                        DataTable dt = MiddleDBInterface.getdt(sql, SQLHelper.sqlconn(Login.strConn));
+                        //this.dataGridView1.DataSource = dt;
+                        form3UserControls(ItemDesc, CaiZhi, form1contorlname3, Convert.ToString(dt.Rows[0]["料号"]), Convert.ToString(dt.Rows[0]["品名"]), Convert.ToString(dt.Rows[0]["材质"]), Convert.ToString(dt.Rows[0]["单位"]));
+                        this.Close();
+                    }
+                }
+                else
+                {
+                    string msg = ZJPostCreatItem(strJson);
+                    //{"d":"[{\"Error\":\"主分类名称不等边角钢不存在\",\"Result\":0,\"Method\":null,\"Msg\":\"fail\",\"ItemCode\":\"\"}]"}
+                    msg = msg.Substring(7);
+                    msg = msg.Remove(msg.Length - 3, 3);
+                    msg = msg.Replace(@"\", string.Empty);
+                    ResultModelForZJ resultModelForZJ = JsonConvert.DeserializeObject<ResultModelForZJ>(msg);
+                    if (resultModelForZJ.Msg == "fail")
+                    {
+                        MessageBox.Show(resultModelForZJ.Error);
+                    }
+                    else
+                    {
+                        string itemid = resultModelForZJ.ItemCode;
+                        string sql = string.Format(@"select A.Code 料号,A.Name+A.SPECS 品名,A.DescFlexField_PrivateDescSeg1 材质,A1.Code 单位
+                        from CBO_ItemMaster A
+						left join Base_UOM  A1 on A.InventoryUOM=A1.ID
+						where A.ID={0} and A.Effective_IsEffective=1 and A.Org={1}", itemid, EntID);
+                        DataTable dt = MiddleDBInterface.getdt(sql, SQLHelper.sqlconn(Login.strConn));
+                        //this.dataGridView1.DataSource = dt;
+                        form3UserControls(ItemDesc, CaiZhi, form1contorlname3, Convert.ToString(dt.Rows[0]["料号"]), Convert.ToString(dt.Rows[0]["品名"]), Convert.ToString(dt.Rows[0]["材质"]), Convert.ToString(dt.Rows[0]["单位"]));
+                        this.Close();
+                    }
+                }
             }
             else
             {
-                string itemid = resultModelForZJ.ItemCode;
-                string sql = string.Format(@"select A.Code 料号,A.Name+A.SPECS 品名,A.DescFlexField_PrivateDescSeg1 材质,A1.Name 单位
-                        from CBO_ItemMaster A
-						left join Base_UOM_trl  A1 on A.InventoryUOM=A1.ID and A1.SysMLFlag='zh-CN' 
-						where A.ID={0} and A.Effective_IsEffective=1 and A.Org={1}", itemid, EntID);
-                DataTable dt = MiddleDBInterface.getdt(sql, SQLHelper.sqlconn(Login.strConn));
-                //this.dataGridView1.DataSource = dt;
-                form3UserControls(ItemDesc, CaiZhi, form1contorlname3, Convert.ToString(dt.Rows[0]["料号"]), Convert.ToString(dt.Rows[0]["品名"]), Convert.ToString(dt.Rows[0]["材质"]), Convert.ToString(dt.Rows[0]["单位"]));
-                this.Close();
+                MessageBox.Show("系统中品名" + itemName + "对应的主分类不唯一");
             }
-            //}
+
+
         }
 
 
@@ -330,7 +366,6 @@ namespace WindowsApplication2
         public static int itemMainItemCategoryCount(string name, ref string Code)
         {
             int count = 0;
-            Code = string.Empty;
             string str = string.Format(@"select distinct a.MainItemCategory,A1.Code from  CBO_ItemMaster  A
             left join CBO_Category A1 on a1.ID=a.MainItemCategory
             LEFT JOIN CBO_CategoryType A2 ON A2.ID=A1.CategorySystem
@@ -357,7 +392,7 @@ namespace WindowsApplication2
         /// </summary>
         /// <param name="str"></param>
         /// <returns></returns>
-        public static string ZJPostCreatItem(string str,string strAction)
+        public static string ZJPostCreatItem(string str)
         {
             string url = commUntil.GetConntionSetting("U9API");
             //string url = "http://localhost/U9/RestServices/YY.U9.Cust.APISV.IMainSV.svc/DO";
@@ -367,10 +402,10 @@ namespace WindowsApplication2
             request.AddHeader("Content-Type", "application/json");
             //str = "" + str.Replace("\"", "\\\"") + "";
             str = ReplaceString(str);
-            string OrgCode = DataHelper.getStr(Login.u9ContentHt["OrgCode"]);//上下文组织编码
-            string UserCode = DataHelper.getStr(Login.u9ContentHt["UserCode"]);//上下文用户编码
+            string OrgCode = getstr(Login.u9ContentHt["OrgCode"]);//上下文组织编码
+            string UserCode = getstr(Login.u9ContentHt["UserCode"]);//上下文用户编码
             string EntCode = System.Configuration.ConfigurationManager.AppSettings["EnterpriseID"];//企业编码
-            string body = "{\"context\":{\"CultureName\":\"zh-CN\",\"EntCode\":\"" + EntCode + "\",\"OrgCode\":\"" + OrgCode + "\",\"UserCode\":\"" + UserCode + "\"},\"args\":\"" + str + "\",\"action\":\"" + strAction + "\"}";
+            string body = "{\"context\":{\"CultureName\":\"zh-CN\",\"EntCode\":\"" + EntCode + "\",\"OrgCode\":\"" + OrgCode + "\",\"UserCode\":\"" + UserCode + "\"},\"args\":\"" + str + "\",\"action\":\"ZJAddForSgcgWinform\"}";
             //body.Replace("strorg", getstr(Login.u9ContentHt["OrgCode"]));
             //body.Replace("struser", getstr(Login.u9ContentHt["UserCode"]));
             request.AddParameter("application/json", body, ParameterType.RequestBody);
@@ -378,7 +413,31 @@ namespace WindowsApplication2
             return response.Content;
         }
 
-     
+        /// <summary>
+        ///转换率不为空的料品创建,双单位
+        /// </summary>
+        /// <param name="str"></param>
+        /// <returns></returns>
+        public static string ZJPostCreatItemByZhl(string str)
+        {
+            string url = commUntil.GetConntionSetting("U9API");
+            //string url = "http://localhost/U9/RestServices/YY.U9.Cust.APISV.IMainSV.svc/DO";
+            var client = new RestClient(url);
+            client.Timeout = -1;
+            var request = new RestRequest(Method.POST);
+            request.AddHeader("Content-Type", "application/json");
+            //str = "" + str.Replace("\"", "\\\"") + "";
+            str = ReplaceString(str);
+            string OrgCode = getstr(Login.u9ContentHt["OrgCode"]);//上下文组织编码
+            string UserCode = getstr(Login.u9ContentHt["UserCode"]);//上下文用户编码
+            string EntCode = System.Configuration.ConfigurationManager.AppSettings["EnterpriseID"];//企业编码
+            string body = "{\"context\":{\"CultureName\":\"zh-CN\",\"EntCode\":\"" + EntCode + "\",\"OrgCode\":\"" + OrgCode + "\",\"UserCode\":\"" + UserCode + "\"},\"args\":\"" + str + "\",\"action\":\"ZJAddForSgcgWinformByZhl\"}";
+            //body.Replace("strorg", getstr(Login.u9ContentHt["OrgCode"]));
+            //body.Replace("struser", getstr(Login.u9ContentHt["UserCode"]));
+            request.AddParameter("application/json", body, ParameterType.RequestBody);
+            IRestResponse response = client.Execute(request);
+            return response.Content;
+        }
 
 
         /// <summary>
@@ -412,7 +471,10 @@ namespace WindowsApplication2
 
         #region <<防止NULL异常>>
 
-    
+        private static string getstr(object obj)
+        {
+            return obj == null ? "" : obj.ToString();
+        }
 
 
         private long getlong(object obj)

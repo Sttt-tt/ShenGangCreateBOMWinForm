@@ -38,10 +38,10 @@ namespace WindowsApplication2.VO
         {
             this.itemcode = DataHelper.getStr(row.Cells["物料编码"].Value);//子件料号
             this.itemdesc = DataHelper.getStr(row.Cells["物料描述"].Value);//名称+材质+规格型号
-            this.unit = DataHelper.getStr(row.Cells["基本计量单位"].Value);//基本计量单位   KG=>W013; EA=>PCS
+            this.unit =PubHelper.GetUOMCode(DataHelper.getStr(row.Cells["基本计量单位"].Value));
             this.formAttribute = DataHelper.getStr(row.Cells["料品形态属性"].Value);//料品形态属性
-            decimal parentQty = DataHelper.getDecimal(row.Cells["母件用量"].Value);//母件用量
-            decimal useQty = DataHelper.getDecimal(row.Cells["数量/重量"].Value);//数量
+            //decimal parentQty = DataHelper.getDecimal(row.Cells["母件用量"].Value);//母件用量
+            decimal useQty = DataHelper.getDecimal(row.Cells["子件用量"].Value);//数量
             this.Bzth = DataHelper.getStr(row.Cells["标准图号"].Value);//料品形态属性
             this.Yitemdesc = DataHelper.getStr(row.Cells["原物料描述"].Value);//料品形态属性
 

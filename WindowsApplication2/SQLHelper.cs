@@ -105,6 +105,18 @@ namespace WindowsApplication2
             OleDbCommand odc = new OleDbCommand(commandText, connection);
             return odc.ExecuteScalar();
         }
+        public static object ExecuteScalar(string strConn, string commandText)
+        {
+            SqlConnection conn = new SqlConnection(strConn);
+            if (conn.State != ConnectionState.Open)
+            {
+                conn.Open();
+            }
+            SqlCommand odc = new SqlCommand(commandText, conn);
+            return odc.ExecuteScalar();
+        }
+
+
         public static DataTable getdt_new(string sql,Object obj)
         {
             try

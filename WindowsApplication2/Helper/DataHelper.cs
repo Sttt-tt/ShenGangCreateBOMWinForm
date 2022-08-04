@@ -10,7 +10,7 @@ namespace WindowsApplication2.Helper
     {
         public static string getStr(object obj)
         {
-            return obj == null ? "" : obj.ToString();
+            return obj == null ? "" : obj.ToString().Replace("\t","");
         }
 
         public static decimal getDecimal(object obj)

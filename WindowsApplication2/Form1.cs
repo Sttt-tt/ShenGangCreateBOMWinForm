@@ -1417,9 +1417,13 @@ namespace WindowsApplication2
             this.dataGridView1.Columns["是否末阶"].Visible = false;
             this.dataGridView1.Columns["wbs"].Visible = false;
             this.dataGridView1.Columns["标准图号"].Visible = false;
-            this.dataGridView1.Columns["原物料描述"].Visible = false;
+            this.dataGridView1.Columns["母件物料描述"].Visible = false;
             this.dataGridView1.Columns["母件基本计量单位"].Visible = false;
-
+            this.dataGridView1.Columns["序号"].Width =60;
+            this.dataGridView1.Columns["母件用量"].Width = 70;
+            this.dataGridView1.Columns["子件用量"].Width = 70;
+            this.dataGridView1.Columns["物料描述"].Visible = false;
+            this.dataGridView1.Columns["基本计量单位"].Width = 90;
             //隐藏1.2.3.4.5.6.7.8.9.10......
             for (int i = 0; i < dataGridView1.RowCount; i++)
             {
@@ -1467,11 +1471,11 @@ namespace WindowsApplication2
                 //第一步  DataTalbe转BOM结构
                 string strJson = GetZJBOMJson(dg);
 
-                string CommandType = "CreateBOM";
-                List<www.ufida.org.EntityData.UFIDAU9CustCommonAPISVDocDTOData> dictdtos = new List<UFIDAU9CustCommonAPISVDocDTOData>();
-                Dictionary<string, Hashtable> dic = new Dictionary<string, Hashtable>();
-                string key = string.Empty;
-                Hashtable damicht = new Hashtable();
+                //string CommandType = "CreateBOM";
+                //List<www.ufida.org.EntityData.UFIDAU9CustCommonAPISVDocDTOData> dictdtos = new List<UFIDAU9CustCommonAPISVDocDTOData>();
+                //Dictionary<string, Hashtable> dic = new Dictionary<string, Hashtable>();
+                //string key = string.Empty;
+                //Hashtable damicht = new Hashtable();
                 List<string> MasterItemMasters = new List<string>(); ///所有需要创建的bom母件集合
                 string rtnmsg = "";
                 rtnmsg = ZJPostCreatBom(strJson);
@@ -1630,7 +1634,7 @@ namespace WindowsApplication2
                 if (dr.Cells["是否虚拟"].Value.ToString().Trim().Equals("是"))
                 {
                     // 设置单元格的背景色
-                    dr.Cells[6].Style.ForeColor = Color.Red;
+                    dr.Cells["物料编码"].Style.ForeColor = Color.Red;
                 }
             }
         }
@@ -1657,7 +1661,7 @@ namespace WindowsApplication2
                 this.dataGridView1.Columns["是否末阶"].Visible = true;
                 this.dataGridView1.Columns["wbs"].Visible = true;
                 this.dataGridView1.Columns["标准图号"].Visible = true;
-                this.dataGridView1.Columns["原物料描述"].Visible = true;
+                //his.dataGridView1.Columns["原物料描述"].Visible = true;
                 //隐藏1.2.3.4.5.6.7.8.9.10......
                 for (int i = 0; i < dataGridView1.RowCount; i++)
                 {
@@ -1684,7 +1688,7 @@ namespace WindowsApplication2
                 this.dataGridView1.Columns["是否末阶"].Visible = false;
                 this.dataGridView1.Columns["wbs"].Visible = false;
                 this.dataGridView1.Columns["标准图号"].Visible = false;
-                this.dataGridView1.Columns["原物料描述"].Visible = false;
+                //this.dataGridView1.Columns["原物料描述"].Visible = false;
                 //隐藏1.2.3.4.5.6.7.8.9.10......
                 for (int i = 0; i < dataGridView1.RowCount; i++)
                 {
@@ -1735,7 +1739,7 @@ namespace WindowsApplication2
                 this.tabPage1.Text = "自接物料清单数据";
                 this.tabPage1.Refresh();
             }
-            str = "select 序号,母件料品,母件物料描述,母件材料,母件基本计量单位,母件用量,物料编码,物料描述,基本计量单位,[数量/重量],材料,制造路线,是否末阶,是否虚拟,wbs,料品形态属性,备注,标准图号,原物料描述 from Cust_BomZJ_Data where wbs='" + code + "'";
+            str = "select 序号,母件料品,母件描述,母件物料描述,母件材料,母件基本计量单位,母件用量,物料编码,物料描述,子件描述,基本计量单位,子件用量,材料,制造路线,是否末阶,是否虚拟,wbs,料品形态属性,备注,标准图号 from Cust_BomZJ_Data where wbs='" + code + "'";
             DataSet ds = SqlHelper.ExecuteDataset(connectionString, CommandType.Text, str);
             DataRowone = ds.Tables[0].Rows[0];
             this.dataGridView1.DataSource = ds.Tables[0];
@@ -1743,7 +1747,13 @@ namespace WindowsApplication2
             this.dataGridView1.Columns["是否末阶"].Visible = false;
             this.dataGridView1.Columns["wbs"].Visible = false;
             this.dataGridView1.Columns["标准图号"].Visible = false;
-            this.dataGridView1.Columns["原物料描述"].Visible = false;
+            this.dataGridView1.Columns["母件物料描述"].Visible = false;
+            this.dataGridView1.Columns["物料描述"].Visible = false;
+
+            this.dataGridView1.Columns["序号"].Width = 60;
+            this.dataGridView1.Columns["母件用量"].Width = 70;
+            this.dataGridView1.Columns["子件用量"].Width = 70;
+            this.dataGridView1.Columns["基本计量单位"].Width = 90;
 
             //隐藏1.2.3.4.5.6.7.8.9.10......
             for (int i = 0; i < dataGridView1.RowCount; i++)
@@ -1780,9 +1790,9 @@ namespace WindowsApplication2
                 string value = dataGridView1[e.ColumnIndex, e.RowIndex].Value?.ToString();
 
                 //单位
-                string itemUnit = dataGridView1[4, e.RowIndex].Value?.ToString();
+                //string itemUnit = dataGridView1[4, e.RowIndex].Value?.ToString();
                 //如果是物料描述列修改  则进入新的form2
-                if (e.ColumnIndex == 7)
+                if (e.ColumnIndex == 9)
                 {
                     //料品形态属性
                     string itemAttribute = DataHelper.getStr(dataGridView1["料品形态属性", e.RowIndex].Value);
@@ -1793,7 +1803,7 @@ namespace WindowsApplication2
                     string pItemCode = dataGridView1["母件料品", e.RowIndex].Value?.ToString().Split('(')[0];
                     string caizhi = dataGridView1["母件材料", e.RowIndex].Value?.ToString();
                     controlname3 = ((DataGridView)sender).Name;
-                    Form3 f = new Form3(pItemCode, controlname3, itemUnit, pItemDesc, caizhi, itemAttribute);
+                    Form3 f = new Form3(pItemCode, controlname3, pItemDesc, caizhi, itemAttribute);
                     f.Show();
                     f.form3UserControls += UpdataUIValue3;
                 }
@@ -1857,6 +1867,50 @@ namespace WindowsApplication2
                     }
                 }
             }
+        }
+        private string strDelXH = string.Empty;//待删除的序号
+        private void dataGridView1_UserDeletingRow(object sender, DataGridViewRowCancelEventArgs e)
+        {
+            string strTitle = this.tabPage1.Text;
+            switch (strTitle)
+            {
+                case "自接物料清单数据":
+                case "物料清单数据"://上锅
+                    DataGridViewRow row = e.Row;//当前要删除的行
+
+                    //删除前确认
+                    if (MessageBox.Show("确认要删除选中的行吗?", "删除确认", MessageBoxButtons.YesNo, MessageBoxIcon.Question) != DialogResult.Yes)
+                    {
+                        //如果不是Ok，则删除
+                        e.Cancel = true;
+                        return;
+                    }
+                    strDelXH= DataHelper.getStr(row.Cells["序号"].Value);
+                    
+                    break;
+                default:
+                    e.Cancel = true;
+                    break;
+            }
+        }
+
+        private void dataGridView1_UserDeletedRow(object sender, DataGridViewRowEventArgs e)
+        {
+            string strTitle = this.tabPage1.Text;
+            switch (strTitle)
+            {
+                case "自接物料清单数据":
+                case "物料清单数据"://上锅
+                    List<DataGridViewRow> delRows = PubHelper.GetSelRows(this.dataGridView1, strDelXH);
+                    foreach (DataGridViewRow dgRow in delRows)
+                    {
+                        this.dataGridView1.Rows.Remove(dgRow);
+                    }
+                    break;
+                default:
+                    break;
+            }
+
         }
     }
 }
