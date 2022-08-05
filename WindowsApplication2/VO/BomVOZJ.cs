@@ -43,7 +43,7 @@ namespace WindowsApplication2.VO
             //decimal parentQty = DataHelper.getDecimal(row.Cells["母件用量"].Value);//母件用量
             decimal useQty = DataHelper.getDecimal(row.Cells["子件用量"].Value);//数量
             this.Bzth = DataHelper.getStr(row.Cells["标准图号"].Value);//料品形态属性
-            this.Yitemdesc = DataHelper.getStr(row.Cells["原物料描述"].Value);//料品形态属性
+            this.Yitemdesc = DataHelper.getStr(row.Cells["子件描述"].Value);//料品形态属性
 
             this.qty = useQty;//数量
             //this.qty = useQty;

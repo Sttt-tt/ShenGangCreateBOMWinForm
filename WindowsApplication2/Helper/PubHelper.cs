@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -41,6 +42,50 @@ namespace WindowsApplication2.Helper
             if (strMainCategoryNames.Contains(categroyName))
                 isDualUOM = true;
             return isDualUOM;
+
+        }
+        /// <summary>
+        /// 判断当前序号是否是末级
+        /// </summary>
+        /// <param name="curXh"></param>
+        /// <param name="xhLst"></param>
+        /// <returns></returns>
+        public static bool chkIsEnd(string curXh,List<string> xhLst)
+        {
+            //一级   1
+            //二级   1-1
+            //三级   1-1/1
+            //四级   1-1/1-1
+            string[] curXh1S = curXh.Split('-');
+            string[] curXh2S = curXh.Split('/');
+            string nextXh = string.Empty;//下一级序号
+            if (!curXh.Contains("-"))
+            {
+                //一级   1
+                nextXh = curXh + "-1";//下级序号
+                if (!xhLst.Contains(nextXh))
+                    return true;
+            } else if (curXh1S.Length==2 && !curXh.Contains("/"))
+            {
+                //二级   1-1
+                nextXh = curXh + "/1";//下级序号
+                if (!xhLst.Contains(nextXh))
+                    return true;
+            } else if (curXh1S.Length==2 && curXh2S.Length == 2)
+            {
+                //三级   1-1/1
+                nextXh = curXh + "-1";//下级序号
+                if (!xhLst.Contains(nextXh))
+                    return true;
+            } else if (curXh1S.Length == 3 && curXh2S.Length == 2)
+            {
+                //四级   1-1/1-1
+                nextXh = curXh + "/1";//下级序号
+                if (!xhLst.Contains(nextXh))
+                    return true;
+            }
+
+            return false;
 
         }
 
@@ -95,11 +140,10 @@ namespace WindowsApplication2.Helper
         /// <returns></returns>
         public static string getMainCategroyCodeByName(string strConn,string name,string orgid)
         {
-            string sql = $@"select A1.Code from  CBO_Category A 
+            string sql = $@"select A.Code from  CBO_Category A 
 left join cbo_category_trl A1 on A.ID=A1.ID and A1.SysMLFlag='zh-CN' 
-            LEFT JOIN CBO_CategoryType A2 ON A2.ID = A1.CategorySystem
-            where a.Name = '{name}' and a.org='{orgid}' and A.Effective_IsEffective = 1 AND A2.Code = '01' and A1.DescFlexField_PrivateDescSeg2 != 'true'
-            order by a.MainItemCategory,A1.Code";
+            LEFT JOIN CBO_CategoryType A2 ON A2.ID = A.CategorySystem
+            where a1.Name = '{name}' and a.org='{orgid}' AND A2.Code = '01' ";
             object obj = SQLHelper.ExecuteScalar(strConn, sql);
             return DataHelper.getStr(obj);
         }

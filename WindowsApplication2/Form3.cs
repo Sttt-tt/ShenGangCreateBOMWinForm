@@ -297,7 +297,7 @@ namespace WindowsApplication2
             //      else
             //      {
             string strAction = zhl > 0 ? "ZJAddForSgcgWinformByZhl" : "ZJAddForSgcgWinform";
-            string msg = ZJPostCreatItem(strJson, "ZJAddForSgcgWinform");
+            string msg = ZJPostCreatItem(strJson, strAction);
             //{"d":"[{\"Error\":\"主分类名称不等边角钢不存在\",\"Result\":0,\"Method\":null,\"Msg\":\"fail\",\"ItemCode\":\"\"}]"}
             msg = msg.Substring(7);
             msg = msg.Remove(msg.Length - 3, 3);
