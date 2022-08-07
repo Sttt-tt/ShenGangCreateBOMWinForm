@@ -235,52 +235,13 @@ namespace WindowsApplication2
                     }
                 }
                 sheet.RemoveColumnBreak(5);
-                //获取表头
-                IRow header = sheet.GetRow(sheet.FirstRowNum);
-                int startRow = 0;//数据的第一行索引
 
+                dt = PubHelper.GetShangGuoDataTable(sheet);
 
-                if (isColumnName)//表示第一行是列名
-                {
-                    startRow = sheet.FirstRowNum + 1;//数据从第二行开始读
-
-                    //遍历表的第一行，即所有的列名
-                    for (int i = header.FirstCellNum; i < header.LastCellNum; i++)
-                    {
-                        ICell cell = header.GetCell(i);
-                        if (cell != null)
-                        {
-                            //获取列名的值
-                            string colName = cell.ToString();
-
-                            if (colName != null)
-                            {
-                                DataColumn col = new DataColumn(colName);
-                                dt.Columns.Add(col);
-                                if (colName == "展开层")
-                                {
-                                    dt.Columns.Add("母件料品");
-                                    dt.Columns.Add("母件物料描述");
-                                    dt.Columns.Add("母件基本计量单位");
-                                    dt.Columns.Add("母件用量");
-                                }
-                            }
-                            else
-                            {
-                                DataColumn col = new DataColumn();
-                                dt.Columns.Add(col);
-                            }
-                        }
-                    }
-                    //dt.Columns.Add("母件料品");
-                    dt.Columns.Add("料品形态属性");
-                    dt.Columns.Add("制造路线");
-                    dt.Columns.Add("备注");
-                }
-
-
+                decimal preCengJi = 0m;//上一层级 展开层
+                DataRow preRow = null;
                 //读取数据
-                for (int i = startRow; i <= sheet.LastRowNum; i++)
+                for (int i = 1; i <= sheet.LastRowNum; i++)
                 {
                     IRow row = sheet.GetRow(i);
 
@@ -289,15 +250,57 @@ namespace WindowsApplication2
                         continue;
                     }
 
+                 
+
+                    decimal xh = DataHelper.getDecimal(row.GetCell(0).ToString());//序号
+                    decimal curCengJi = DataHelper.getDecimal(row.GetCell(2).ToString());//展开层
+                    string strItemCode = DataHelper.getStr(row.GetCell(3).ToString());//物料编码
+                   
+         
+
+
                     DataRow dr = dt.NewRow();
+                    dr["序号"] = xh;
+                    dr["展开层"] = curCengJi;
+                    dr["物料编码"] = strItemCode;
+                    switch (curCengJi)
+                    {
+                        case 1: //1层
+                            dr["母件料品"] = strItemCode;
+                            dr["料品形态属性"] = "制造件";
+                            dr["母件物料描述"] = DataHelper.getStr(row.GetCell(4).ToString());//物料描述
+                            dr["母件基本计量单位"] = DataHelper.getStr(row.GetCell(7).ToString());//基本计量单位
+                            dr["母件用量"] = DataHelper.getStr(row.GetCell(8).ToString());//数量/重量
+                            break;
+                        default:
+                            preRow = dt.Rows[dt.Rows.Count - 1];
+                            preCengJi = DataHelper.getDecimal(preRow["展开层"]);
+
+                            dr["料品形态属性"] = "采购件";
+                            if (preCengJi == curCengJi - 1)
+                            {
+                                
+                                preRow["料品形态属性"] = "制造件";
+                            } else
+                            {
+                                DataRow[] rows = dt.Select("展开层='" + (curCengJi - 1).ToString() + "'");
+                                preRow = rows[rows.Length - 1];
+                            }
+                            dr["母件料品"] = DataHelper.getStr(preRow["物料编码"]);
+                            dr["母件物料描述"] = DataHelper.getStr(preRow["物料描述"]);//物料描述
+                            dr["母件基本计量单位"] = DataHelper.getStr(preRow["基本计量单位"]);//基本计量单位
+                            dr["母件用量"] = DataHelper.getStr(preRow["数量/重量"]);//数量/重量
+                            break;
+                    }
+
                     int k = 0;
-                    for (int j = row.FirstCellNum; j < row.LastCellNum; j++)
+                    for (int j = 4; j < row.LastCellNum; j++)
                     {
 
                         k = j >= 3 ? j + 4 : j;
                         if (row.GetCell(j) != null)
                         {
-                            dr[k] = row.GetCell(j).ToString();
+                                dr[k] = row.GetCell(j).ToString();
                         }
 
                     }
@@ -305,72 +308,9 @@ namespace WindowsApplication2
                 }
             }
 
-            //dt.DefaultView.Sort = "母件料品 asc, 展开层 asc";
-            //List<int> levels = new List<int>();
-            //foreach (DataRow row1 in dt.Rows)
-            //{
-            //    int level = Convert.ToInt32(row1["展开层"]);
-            //    if (!levels.Contains(level)) levels.Add(level);
-            //}
-            //int maxlevel = levels.Max();
-            foreach (DataRow row1 in dt.Rows)
-            {
-                int level = Convert.ToInt32(row1["展开层"]);
-                //if (level == 1)
-                //{
-                //    //row1["母件料品"] = row1["WBS"];
-                //}
-                //else
-                //{
 
-                for (int xuhao = Convert.ToInt32(row1["序号"]) - 1; xuhao >= 0; xuhao--)
-                {
-                    DataRow temprow = dt.Rows[xuhao];
-                    int templevel = Convert.ToInt32(temprow["展开层"]);
-                    if (!string.IsNullOrEmpty(Convert.ToString(row1["母件料品"]))) continue;
-                    if (templevel + 1 == level)
-                    {
-                        row1["母件料品"] = temprow["物料编码"];
-                        row1["母件物料描述"] = temprow["物料描述"];
-                        row1["母件基本计量单位"] = temprow["基本计量单位"];
-                        row1["母件用量"] = temprow["数量/重量"];
-                    }
-                }
-
-                int count = dt.Rows.Count;
-                if (Convert.ToInt32(row1["序号"]) == count)
-                {
-                    row1["料品形态属性"] = "采购件";
-                }
-                else
-                {
-                    int xh = Convert.ToInt32(row1["序号"]) - 1;//当前行序号
-                    DataRow nowrow = dt.Rows[xh];//当前下一行的值
-                    int nowzkc = Convert.ToInt32(nowrow["展开层"]);//下一行展开层
-                    DataRow nextrow = dt.Rows[xh + 1];//当前下一行的值
-                    int nextzkc = Convert.ToInt32(nextrow["展开层"]);//下一行展开层
-                                                                  //}
-                    if (nextzkc < nowzkc)
-                    {
-                        row1["料品形态属性"] = "采购件";
-                    }
-                    else
-                    {
-                        if (Convert.ToString(row1["物料编码"]).StartsWith("0"))
-                        {
-                            row1["料品形态属性"] = "采购件";
-                        }
-                        else
-                        {
-                            row1["料品形态属性"] = "制造件";
-                        }
-
-                    }
-                }
-
-            }
             dt = DeleteRow(dt);
-            dt.DefaultView.Sort = "母件料品 asc,物料描述 asc";
+            //dt.DefaultView.Sort = "母件料品 asc,物料描述 asc";
             return dt;
         }
 
@@ -392,10 +332,11 @@ namespace WindowsApplication2
             dt.Columns.Add("用量");
             dt.Columns.Add("材料");
             dt.Columns.Add("单重");
+            dt.Columns.Add("总重");
             dt.Columns.Add("备注");
             //dt.Columns.Add("材料");
             //dt.Columns.Add("单重");
-            //dt.Columns.Add("备  注");
+       
             dt.Columns.Add("料品形态属性");
             //dt.Columns.Add("转换率");
             dt.Columns.Add("标准图号");
@@ -457,7 +398,8 @@ namespace WindowsApplication2
                             //3 row.GetCell(12)  数量
                             //4 row.GetCell(13)  材料
                             //5 row.GetCell(14) 单重
-                            //6 row.GetCell(16)  备 注
+                            //6 row.GetCell(15) 总重
+                            //7 row.GetCell(16)  备 注
 
                             //if (j == 6)
                             //{
@@ -610,6 +552,9 @@ namespace WindowsApplication2
                             {
                                 dr["单重"] = row.GetCell(j).ToString();
                             }
+
+                            dr["总重"] = DataHelper.getStr(row.GetCell(15));
+                            
                             if (j == 16)
                             {
                                 dr["备注"] = row.GetCell(j).ToString();
@@ -703,7 +648,7 @@ namespace WindowsApplication2
             dt.Columns.Add("是否末阶");
             dt.Columns.Add("是否虚拟");
             dt.Columns.Add("wbs");
-            //dt.Columns.Add("备  注");
+            dt.Columns.Add("总重");
             dt.Columns.Add("料品形态属性");
             dt.Columns.Add("备注");
             //dt.Columns.Add("转换率");
@@ -739,6 +684,7 @@ namespace WindowsApplication2
                         dr["子件用量"] = row["用量"];
                         dr["材料"] = row["材料"];
                         //dr["单重"] = row["单重"];
+                        dr["总重"] = DataHelper.getStr(row["总重"]);
                         dr["料品形态属性"] = row["料品形态属性"];
                         dr["备注"] = row["备注"];
                         //dr["转换率"] = row["转换率"];
@@ -805,6 +751,7 @@ namespace WindowsApplication2
                                 dr["子件用量"] = row["用量"];
                                 dr["材料"] = row["材料"];
                                 //dr["单重"] = row["单重"];
+                                dr["总重"] = DataHelper.getStr(row["总重"]);
                                 dr["料品形态属性"] = row["料品形态属性"];
                                 dr["备注"] = row["备注"];
                                 //dr["转换率"] = row["转换率"];
@@ -866,6 +813,7 @@ namespace WindowsApplication2
                                 dr["基本计量单位"] = "PCS";
                                 dr["子件用量"] = row["用量"];
                                 //dr["单重"] = row["单重"];
+                                dr["总重"] = DataHelper.getStr(row["总重"]);
                                 dr["材料"] = row["材料"];
                                 dr["料品形态属性"] = row["料品形态属性"];
                                 dr["备注"] = row["备注"];
@@ -929,6 +877,7 @@ namespace WindowsApplication2
                                 dr["子件用量"] = row["用量"];
                                 dr["材料"] = row["材料"];
                                 //dr["单重"] = row["单重"];
+                                dr["总重"] = DataHelper.getStr(row["总重"]);
                                 dr["料品形态属性"] = row["料品形态属性"];
                                 dr["备注"] = row["备注"];
                                 //dr["转换率"] = row["转换率"];

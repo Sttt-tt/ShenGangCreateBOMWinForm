@@ -17,6 +17,7 @@ namespace WindowsApplication2.VO
         public string itemdesc { get; set; }//母件描述
         public string unit { get; set; }//单位
         public string qty { get; set; }//用量
+        public string formAttribute { get; set; }//料品形态
         public string private2 { get; set; }//私有字段2 工艺路线
         public string private3 { get; set; }//私有字段3 备注
         public List<BomLineVO> rows = new List<BomLineVO>();
@@ -28,6 +29,7 @@ namespace WindowsApplication2.VO
         public string itemdesc { get; set; }//子件描述  名称+材质+规格型号
         public string unit { get; set; }//单位
         public decimal qty { get; set; }//用量
+        public string private8 { get; set; }//私有字段8 路线
         public string private9 { get; set; }//私有字段9 备注
         public string formAttribute { get; set; }//料品形态
 
@@ -42,7 +44,8 @@ namespace WindowsApplication2.VO
 
             this.qty = Math.Round(useQty / parentQty, 4);//数量
             //this.qty = useQty;
-            this.private9 = DataHelper.getStr(row.Cells["备注"].Value);//子件料号
+            this.private8 = DataHelper.getStr(row.Cells["制造路线"].Value);//
+            this.private9 = DataHelper.getStr(row.Cells["备注"].Value);//
         }
 
     }

@@ -188,95 +188,24 @@ namespace WindowsApplication2
             //DataTable dt = ReadExcelToDataSet.ImportDataTableFromExcel(myStream, 0, 3, true);
             ExcelHelper excelHelper = new ExcelHelper(openFileDialog.FileName);
             DataTable dt = excelHelper.ExcelToDataTable2(0);
-            //Form1.dataGridView4.DataSource = changedt_bom(dt);
-
+          
             dataGridView1.DataSource = dt;
-            for (int iRow = 0; iRow < dataGridView1.Rows.Count; iRow++)
-            {
-                string bitem = getstr(dataGridView1.Rows[iRow].Cells["母件料品"].Value);
-                string item = getstr(dataGridView1.Rows[iRow].Cells["物料编码"].Value);
-                if (iRow >= 1)
-                {
-                    string sbitem = getstr(dataGridView1.Rows[iRow - 1].Cells["母件料品"].Value);
-                    string sitem = getstr(dataGridView1.Rows[iRow - 1].Cells["物料编码"].Value);
-                    if (bitem == sbitem && item == sitem)
-                    {
-                        dataGridView1.Rows.Remove(dataGridView1.Rows[iRow]);
-                        iRow = iRow - 1;
-                    }
-                }
-            }
-            //Dictionary<string, string> dic = new Dictionary<string, string>();
             //for (int iRow = 0; iRow < dataGridView1.Rows.Count; iRow++)
             //{
-            //    string zkc = getstr(dataGridView1.Rows[iRow].Cells["展开层"].Value);
-            //    if (Convert.ToInt32(zkc) <= 2) continue;
             //    string bitem = getstr(dataGridView1.Rows[iRow].Cells["母件料品"].Value);
             //    string item = getstr(dataGridView1.Rows[iRow].Cells["物料编码"].Value);
-            //    if (dic.Count > 0)
+            //    if (iRow >= 1)
             //    {
-            //        if (ContainsKeyValue(dic, bitem, item))
+            //        string sbitem = getstr(dataGridView1.Rows[iRow - 1].Cells["母件料品"].Value);
+            //        string sitem = getstr(dataGridView1.Rows[iRow - 1].Cells["物料编码"].Value);
+            //        if (bitem == sbitem && item == sitem)
             //        {
             //            dataGridView1.Rows.Remove(dataGridView1.Rows[iRow]);
+            //            iRow = iRow - 1;
             //        }
-            //        else
-            //        {
-            //            dic.Add(bitem, item);
-            //        }
-            //    }
-            //    else
-            //    {
-            //        dic.Add(bitem, item);
             //    }
             //}
-            //Dictionary<string, List<BomKey>> dic = new Dictionary<string, List<BomKey>>();
-            //for (int iRow = 0; iRow < dataGridView1.Rows.Count; iRow++)
-            //{
-            //    string zkc = getstr(dataGridView1.Rows[iRow].Cells["展开层"].Value);
-            //    string xuhao = getstr(dataGridView1.Rows[iRow].Cells["序号"].Value);
-            //    if (xuhao == "92")
-            //    {
-            //        continue;
-            //    }
-            //    if (Convert.ToInt32(zkc) <= 2) continue;
-            //    string bitem = getstr(dataGridView1.Rows[iRow].Cells["母件料品"].Value);
-            //    string item = getstr(dataGridView1.Rows[iRow].Cells["物料编码"].Value);
-            //    if (dic.Count > 0)
-            //    {
-            //        if (ContainsKeyValue(dic, bitem, item))
-            //        {
-            //            dataGridView1.Rows.Remove(dataGridView1.Rows[iRow]);
-            //        }
-            //        else
-            //        {
-            //            BomKey newkey = new BomKey();
-            //            newkey.BomMaster = bitem;
-            //            newkey.BomComponent = item;
-            //            List<BomKey> bomKey =  new List<BomKey>();
-            //            dic.TryGetValue(bitem,out bomKey);
-            //            if (bomKey==null)
-            //            {
-            //                List<BomKey> newlistkey = new List<BomKey>();
-            //                newlistkey.Add(newkey);
-            //                dic.Add(bitem, newlistkey);
-            //            }
-            //            else
-            //            {
-            //                dic[bitem].Add(newkey);
-            //            }
-            //            //dic.Add(bitem, item);
-            //        }
-            //    }
-            //    else
-            //    {
-            //        BomKey newkey = new BomKey();
-            //        newkey.BomMaster = bitem;
-            //        newkey.BomComponent = item;
-            //        List<BomKey> newlistkey = new List<BomKey>();
-            //        newlistkey.Add(newkey);
-            //        dic.Add(bitem, newlistkey);
-            //    }
-            //}
+           
             initDataGrid(dataGridView1);
         }
 
@@ -355,13 +284,20 @@ namespace WindowsApplication2
                     dict.Add("制造件", 0);
                     dict.Add("虚拟", 0);
                     dict.Add("工艺", 0);
+                    List<string> itemCodeLst = new List<string>();
 
                     foreach (DataGridViewRow row in dataGridView1.Rows)
                     {
+
+                        string itemCode = DataHelper.getStr(row.Cells["物料编码"].Value);
+                        if (itemCodeLst.Contains(itemCode)) continue;
+                        itemCodeLst.Add(itemCode);
+
+
                         string itemAttribute = DataHelper.getStr(row.Cells["料品形态属性"].Value);
                         if (dict.ContainsKey(itemAttribute))
                             dict[itemAttribute] = dict[itemAttribute] + 1;
-
+                        
                         string strGrade = DataHelper.getStr(row.Cells["展开层"].Value);
                         if (strGrade == "2")
                         {
@@ -371,7 +307,8 @@ namespace WindowsApplication2
                         }
 
                     }
-                    msg("创建bom成功,共导入制造件" + dict["制造件"] + pInvCodeLst.Count + ",采购件" + dict["采购件"] + ",虚拟件" + dict["虚拟"] + ",工艺件" + dict["工艺"]);
+                    long zhizaoTotalNum = dict["制造件"] + pInvCodeLst.Count;//制造总数
+                    msg("创建bom成功,共导入制造件" + zhizaoTotalNum + ",采购件" + dict["采购件"] + ",虚拟件" + dict["虚拟"] + ",工艺件" + dict["工艺"]);
 
                 }
             }
@@ -435,8 +372,10 @@ namespace WindowsApplication2
             dg.Columns["展开层"].Width = 60;
             dg.Columns["物料描述"].Width = 200;
             dg.Columns["基本计量单位"].Width = 80;
+            dg.Columns["母件物料描述"].Visible = false;
             dg.Columns["BOM用途"].Visible = false;
             dg.Columns["物料类型"].Visible = false;
+            dg.Columns["WBS"].Visible = false;
             //dg.Columns["母件用量"].Visible = false;
         }
 
@@ -458,6 +397,7 @@ namespace WindowsApplication2
         {
             string strJson = string.Empty;
             List<BomVO> dtos = new List<BomVO>();
+            DataTable dt = dg.DataSource as DataTable;
             foreach (DataGridViewRow row in dg.Rows)
             {
                 string pInvCode = DataHelper.getStr(row.Cells["母件料品"].Value);
@@ -472,7 +412,10 @@ namespace WindowsApplication2
                     dto.itemdesc = pInvDesc;
                     dto.unit = pInvUnit;
                     dto.qty = pInvQty;
-                    dto.private2 = DataHelper.getStr(row.Cells["制造路线"].Value);
+                    DataRow[] selRows = dt.Select("物料编码='" + pInvCode + "'");
+                    dto.formAttribute = selRows.Length <= 0 ? "制造件" : DataHelper.getStr(selRows[0]["料品形态属性"]);
+                    dto.private2 = selRows.Length <= 0 ? "" : DataHelper.getStr(selRows[0]["制造路线"]);
+                    dto.private3 = selRows.Length <= 0 ? "" : DataHelper.getStr(selRows[0]["备注"]);
                     dto.rows.Add(new BomLineVO(row));
                     dtos.Add(dto);
                 }
@@ -495,10 +438,13 @@ namespace WindowsApplication2
         {
             string strJson = string.Empty;
             List<BomVOZJ> dtos = new List<BomVOZJ>();
+            DataTable dt = dg.DataSource as DataTable;
+
             foreach (DataGridViewRow row in dg.Rows)
             {
                 string pInvCode = DataHelper.getStr(row.Cells["母件料品"].Value);
-                string pInvDesc = DataHelper.getStr(row.Cells["母件物料描述"].Value);
+               // string pInvDesc = DataHelper.getStr(row.Cells["母件物料描述"].Value);
+                string pInvDesc = DataHelper.getStr(row.Cells["母件描述"].Value);
                 string pInvUnit = DataHelper.getStr(row.Cells["母件基本计量单位"].Value);
                 string pInvQty = DataHelper.getStr(row.Cells["母件用量"].Value);
                 string material = DataHelper.getStr(row.Cells["母件材料"].Value);
@@ -507,12 +453,18 @@ namespace WindowsApplication2
                 {
                     dto = new BomVOZJ();
                     dto.itemcode = pInvCode;
-                    dto.itemdesc = pInvDesc;
+                    dto.gbbm= PubHelper.chkIsGB(pInvCode) ? pInvCode.Split('(')[0] : "";//国标编码
                     dto.unit = pInvUnit;
                     dto.material = material;
+                    
                     dto.qty = pInvQty;
+                    DataRow[] selRows = dt.Select("物料编码='" + pInvCode + "'");
+                    dto.itemdesc = selRows.Length <= 0 ? pInvDesc : DataHelper.getStr(selRows[0]["子件描述"]);;
+                    dto.formAttribute = selRows.Length <= 0 ? "制造件" : DataHelper.getStr(selRows[0]["料品形态属性"]);
+
                     //dto.private2 = DataHelper.getStr(row.Cells["工艺路线"].Value);
-                    dto.private2 = DataHelper.getStr(row.Cells["制造路线"].Value);
+                    dto.private2 = selRows.Length <= 0 ? "" : DataHelper.getStr(selRows[0]["制造路线"]);
+                    dto.private3 = selRows.Length <= 0 ? "" : DataHelper.getStr(selRows[0]["备注"]);
                     dto.rows.Add(new BomLineVOZJ(row));
                     dtos.Add(dto);
                 }
@@ -1172,73 +1124,10 @@ namespace WindowsApplication2
                 List<string> MasterItemMasters = new List<string>(); ///所有需要创建的bom母件集合
                 string rtnmsg = "";
                 rtnmsg = ZJPostCreatBom(strJson);
-
-                if (rtnmsg == "")
+                TD.Abort();
+                if (!string.IsNullOrEmpty(rtnmsg) && rtnmsg != "{\"d\":\"\"}")
                 {
-                    int cgqty = 0, zzqty = 0, xnqty = 0, gyqty = 0;
-                    List<string> listcg = new List<string>();
-                    List<string> listZz = new List<string>();
-                    List<string> listxn = new List<string>();
-                    List<string> listgy = new List<string>();
-                    for (int iRow = 0; iRow < dataGridView1.Rows.Count; iRow++)
-                    {
-                        string attribute = getstr(dataGridView1.Rows[iRow].Cells["料品形态属性"].Value);
-                        if (attribute == "采购件")
-                        {
-                            if (!listcg.Contains(getstr(dataGridView1.Rows[iRow].Cells["物料编码"].Value)))
-                            {
-                                listcg.Add(getstr(dataGridView1.Rows[iRow].Cells["物料编码"].Value));
-                            }
-                            if (!listZz.Contains(getstr(dataGridView1.Rows[iRow].Cells["母件料品"].Value)))
-                            {
-                                listZz.Add(getstr(dataGridView1.Rows[iRow].Cells["母件料品"].Value));
-                            }
-                        }
-                        else if (attribute == "制造件")
-                        {
-                            if (!listZz.Contains(getstr(dataGridView1.Rows[iRow].Cells["母件料品"].Value)))
-                            {
-                                listZz.Add(getstr(dataGridView1.Rows[iRow].Cells["母件料品"].Value));
-                            }
-                            if (!listZz.Contains(getstr(dataGridView1.Rows[iRow].Cells["物料编码"].Value)))
-                            {
-                                listZz.Add(getstr(dataGridView1.Rows[iRow].Cells["物料编码"].Value));
-                            }
-                        }
-                        else if (attribute == "虚拟")
-                        {
-                            if (!listxn.Contains(getstr(dataGridView1.Rows[iRow].Cells["物料编码"].Value)))
-                            {
-                                listxn.Add(getstr(dataGridView1.Rows[iRow].Cells["物料编码"].Value));
-                            }
-                            if (!listxn.Contains(getstr(dataGridView1.Rows[iRow].Cells["母件料品"].Value)))
-                            {
-                                listxn.Add(getstr(dataGridView1.Rows[iRow].Cells["母件料品"].Value));
-                            }
-                        }
-                        else if (attribute == "工艺")
-                        {
-                            if (!listgy.Contains(getstr(dataGridView1.Rows[iRow].Cells["物料编码"].Value)))
-                            {
-                                listgy.Add(getstr(dataGridView1.Rows[iRow].Cells["物料编码"].Value));
-                            }
-                            if (!listgy.Contains(getstr(dataGridView1.Rows[iRow].Cells["母件料品"].Value)))
-                            {
-                                listgy.Add(getstr(dataGridView1.Rows[iRow].Cells["母件料品"].Value));
-                            }
-                        }
-                    }
-                    cgqty = listcg.Count;
-                    zzqty = listZz.Count;
-                    xnqty = listxn.Count;
-                    gyqty = listgy.Count;
-                    TD.Abort();
-                    msg("创建bom成功,共导入制造件" + zzqty + "件,采购件" + cgqty + "件,虚拟件" + xnqty + "件,工艺件" + gyqty + "件");
-                }
-
-                else if (!string.IsNullOrEmpty(rtnmsg) && rtnmsg != "{\"d\":\"\"}")
-                {
-                    TD.Abort();
+                   
                     if (rtnmsg.Contains("项目已存在"))
                     {
                         return;
@@ -1250,65 +1139,26 @@ namespace WindowsApplication2
                 }
                 else
                 {
-                    int cgqty = 0, zzqty = 0, xnqty = 0, gyqty = 0;
-                    List<string> listcg = new List<string>();
-                    List<string> listZz = new List<string>();
-                    List<string> listxn = new List<string>();
-                    List<string> listgy = new List<string>();
-                    for (int iRow = 0; iRow < dataGridView1.Rows.Count; iRow++)
+                    Dictionary<string, long> dict = new Dictionary<string, long>();
+                    dict.Add("采购件", 0);
+                    dict.Add("制造件", 1);
+                    dict.Add("虚拟", 0);
+                    dict.Add("工艺", 0);
+                    List<string> itemCodeLst = new List<string>();
+                    foreach (DataGridViewRow row in dataGridView1.Rows)
                     {
-                        string attribute = getstr(dataGridView1.Rows[iRow].Cells["料品形态属性"].Value);
-                        if (attribute == "采购件")
-                        {
-                            if (!listcg.Contains(getstr(dataGridView1.Rows[iRow].Cells["物料编码"].Value)))
-                            {
-                                listcg.Add(getstr(dataGridView1.Rows[iRow].Cells["物料编码"].Value));
-                            }
-                            if (!listZz.Contains(getstr(dataGridView1.Rows[iRow].Cells["母件料品"].Value)))
-                            {
-                                listZz.Add(getstr(dataGridView1.Rows[iRow].Cells["母件料品"].Value));
-                            }
-                        }
-                        else if (attribute == "制造件")
-                        {
-                            if (!listZz.Contains(getstr(dataGridView1.Rows[iRow].Cells["母件料品"].Value)))
-                            {
-                                listZz.Add(getstr(dataGridView1.Rows[iRow].Cells["母件料品"].Value));
-                            }
-                            if (!listZz.Contains(getstr(dataGridView1.Rows[iRow].Cells["物料编码"].Value)))
-                            {
-                                listZz.Add(getstr(dataGridView1.Rows[iRow].Cells["物料编码"].Value));
-                            }
-                        }
-                        else if (attribute == "虚拟")
-                        {
-                            if (!listxn.Contains(getstr(dataGridView1.Rows[iRow].Cells["物料编码"].Value)))
-                            {
-                                listxn.Add(getstr(dataGridView1.Rows[iRow].Cells["物料编码"].Value));
-                            }
-                            if (!listxn.Contains(getstr(dataGridView1.Rows[iRow].Cells["母件料品"].Value)))
-                            {
-                                listxn.Add(getstr(dataGridView1.Rows[iRow].Cells["母件料品"].Value));
-                            }
-                        }
-                        else if (attribute == "工艺")
-                        {
-                            if (!listgy.Contains(getstr(dataGridView1.Rows[iRow].Cells["物料编码"].Value)))
-                            {
-                                listgy.Add(getstr(dataGridView1.Rows[iRow].Cells["物料编码"].Value));
-                            }
-                            if (!listgy.Contains(getstr(dataGridView1.Rows[iRow].Cells["母件料品"].Value)))
-                            {
-                                listgy.Add(getstr(dataGridView1.Rows[iRow].Cells["母件料品"].Value));
-                            }
-                        }
+                        string itemAttribute = DataHelper.getStr(row.Cells["料品形态属性"].Value);
+                        string itemCode = DataHelper.getStr(row.Cells["物料编码"].Value);
+                        if (itemCodeLst.Contains(itemCode)) continue;
+                        itemCodeLst.Add(itemCode);
+                        if (dict.ContainsKey(itemAttribute))
+                            dict[itemAttribute] = dict[itemAttribute] + 1;
+
+                      
+
                     }
-                    cgqty = listcg.Count;
-                    zzqty = listZz.Count;
-                    xnqty = listxn.Count;
-                    gyqty = listgy.Count;
-                    TD.Abort();
-                    msg("创建bom成功,共导入制造件" + zzqty + "件,采购件" + cgqty + "件,虚拟件" + xnqty + "件,工艺件" + gyqty + "件");
+                    msg("创建bom成功,共导入制造件" + dict["制造件"] + ",采购件" + dict["采购件"] + ",虚拟件" + dict["虚拟"] + ",工艺件" + dict["工艺"]);
+
                 }
             }
             catch (Exception)
@@ -1432,7 +1282,7 @@ namespace WindowsApplication2
                 this.tabPage1.Text = "自接物料清单数据";
                 this.tabPage1.Refresh();
             }
-            str = "select 序号,母件料品,母件描述,母件物料描述,母件材料,母件基本计量单位,母件用量,物料编码,物料描述,子件描述,基本计量单位,子件用量,材料,制造路线,是否末阶,是否虚拟,wbs,料品形态属性,备注,标准图号 from Cust_BomZJ_Data where wbs='" + code + "'";
+            str = "select 序号,母件料品,母件描述,母件物料描述,母件材料,母件基本计量单位,母件用量,物料编码,物料描述,子件描述,基本计量单位,子件用量,材料,制造路线,是否末阶,是否虚拟,wbs,总重,料品形态属性,备注,标准图号 from Cust_BomZJ_Data where wbs='" + code + "'";
             DataSet ds = SqlHelper.ExecuteDataset(connectionString, CommandType.Text, str);
             DataRowone = ds.Tables[0].Rows[0];
             this.dataGridView1.DataSource = ds.Tables[0];
@@ -1568,6 +1418,7 @@ namespace WindowsApplication2
             switch (strTitle)
             {
                 case "自接物料清单数据":
+                case "物料清单数据":
                     DataGridViewRow row = e.Row;//当前要删除的行
 
                     //删除前确认
@@ -1592,6 +1443,7 @@ namespace WindowsApplication2
             switch (strTitle)
             {
                 case "自接物料清单数据":
+                case "物料清单数据":
                     List<DataGridViewRow> delRows = PubHelper.GetSelRows(this.dataGridView1, strDelXH);
                     foreach (DataGridViewRow dgRow in delRows)
                     {

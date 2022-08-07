@@ -1,4 +1,5 @@
-﻿using System;
+﻿using NPOI.SS.UserModel;
+using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
@@ -10,6 +11,38 @@ namespace WindowsApplication2.Helper
 {
     class PubHelper
     {
+
+
+        public static DataTable GetShangGuoDataTable(ISheet sheet)
+        {
+            IRow row = sheet.GetRow(0);
+            DataTable dt = new DataTable();
+            foreach (ICell cell in row.Cells)
+            {
+                string colName = cell.ToString();
+                if (colName == "序号")
+                {
+                    dt.Columns.Add(colName,typeof(Decimal));
+                }
+                else
+                {
+                    dt.Columns.Add(colName);
+                    if (colName == "展开层")
+                    {
+                        dt.Columns.Add("母件料品");
+                        dt.Columns.Add("母件物料描述");
+                        dt.Columns.Add("母件基本计量单位");
+                        dt.Columns.Add("母件用量");
+                    }
+                }
+              
+            }
+            dt.Columns.Add("料品形态属性");
+            dt.Columns.Add("制造路线");
+            dt.Columns.Add("备注");
+            return dt;
+        }
+
         /// <summary>
         /// 检查是否是国标料号
         /// </summary>
